@@ -6,7 +6,6 @@
 package com.opengamma.strata.measure.swap;
 
 import static com.opengamma.strata.basics.date.DayCounts.ACT_360;
-import static com.opengamma.strata.collect.TestHelper.coverPrivateConstructor;
 import static com.opengamma.strata.collect.TestHelper.date;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -151,11 +150,6 @@ public class SwapTradeCalculationFunctionTest {
         ImmutableMap.of(DISCOUNT_CURVE_ID, curve, FORWARD_CURVE_ID, curve),
         ImmutableMap.of());
     return md;
-  }
-
-  //-------------------------------------------------------------------------
-  public void coverage() {
-    coverPrivateConstructor(SwapMeasureCalculations.class);
   }
 
 }
