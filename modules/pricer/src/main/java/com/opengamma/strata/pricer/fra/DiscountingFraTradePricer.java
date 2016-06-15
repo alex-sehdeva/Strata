@@ -60,6 +60,19 @@ public class DiscountingFraTradePricer {
   }
 
   /**
+   * Explains the present value of the FRA product.
+   * <p>
+   * This returns explanatory information about the calculation.
+   * 
+   * @param trade  the trade
+   * @param provider  the rates provider
+   * @return the explanatory information
+   */
+  public ExplainMap explainPresentValue(ResolvedFraTrade trade, RatesProvider provider) {
+    return productPricer.explainPresentValue(trade.getProduct(), provider);
+  }
+
+  /**
    * Calculates the present value sensitivity of the FRA trade.
    * <p>
    * The present value sensitivity of the trade is the sensitivity of the present value to
@@ -195,20 +208,6 @@ public class DiscountingFraTradePricer {
       return productPricer.presentValue(fra, provider);
     }
     return CurrencyAmount.zero(fra.getCurrency());
-  }
-
-  //-------------------------------------------------------------------------
-  /**
-   * Explains the present value of the FRA product.
-   * <p>
-   * This returns explanatory information about the calculation.
-   * 
-   * @param trade  the trade
-   * @param provider  the rates provider
-   * @return the explanatory information
-   */
-  public ExplainMap explainPresentValue(ResolvedFraTrade trade, RatesProvider provider) {
-    return productPricer.explainPresentValue(trade.getProduct(), provider);
   }
 
 }
