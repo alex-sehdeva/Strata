@@ -1,5 +1,8 @@
 Name,Currency,Day Count,Fixing Calendar,Offset Days,Offset Calendar,Effective Date Calendar,Tenor,Tenor Convention,FixingTime,FixingZone
 ,,,,,,
+AED-EIBOR-1M,AED,Act/360,GBLO,2,GBLO,GBLO+USNY,1M,LastBusinessDay,11:00,Europe/London
+AED-EIBOR-3M,AED,Act/360,GBLO,2,GBLO,GBLO+USNY,3M,LastBusinessDay,11:00,Europe/London
+,,,,,,
 GBP-LIBOR-1W,GBP,Act/365F,GBLO,0,GBLO,GBLO,1W,None,11:00,Europe/London
 GBP-LIBOR-2W,GBP,Act/365F,GBLO,0,GBLO,GBLO,2W,None,11:00,Europe/London
 GBP-LIBOR-1M,GBP,Act/365F,GBLO,0,GBLO,GBLO,1M,LastBusinessDay,11:00,Europe/London

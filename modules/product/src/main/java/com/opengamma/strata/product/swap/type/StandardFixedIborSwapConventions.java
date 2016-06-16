@@ -5,6 +5,7 @@
  */
 package com.opengamma.strata.product.swap.type;
 
+import static com.opengamma.strata.basics.currency.Currency.AED;
 import static com.opengamma.strata.basics.currency.Currency.CHF;
 import static com.opengamma.strata.basics.currency.Currency.EUR;
 import static com.opengamma.strata.basics.currency.Currency.GBP;
@@ -41,6 +42,16 @@ final class StandardFixedIborSwapConventions {
   // GBLO+JPTO calendar
   private static final HolidayCalendarId GBLO_JPTO = GBLO.combinedWith(JPTO);
 
+  /**
+   * AED(UA) vanilla fixed vs EIBOR 3M swap.
+   * The fixed leg pays every 1 year with day count 'Act/360'.
+   */
+  public static final FixedIborSwapConvention AED_FIXED_1Y_EIBOR_3M =
+      ImmutableFixedIborSwapConvention.of(
+          "AED-FIXED-1Y-EIBOR-3M",
+          FixedRateSwapLegConvention.of(AED, ACT_360, P12M, BusinessDayAdjustment.of(MODIFIED_FOLLOWING, GBLO_USNY)),
+          IborRateSwapLegConvention.of(IborIndices.AED_EIBOR_3M));
+  
   /**
    * USD(NY) vanilla fixed vs LIBOR 3M swap.
    * The fixed leg pays every 6 months with day count '30U/360'.

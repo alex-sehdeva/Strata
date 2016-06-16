@@ -11,7 +11,10 @@ package com.opengamma.strata.basics.index;
  * Each constant refers to a standard definition of the specified index.
  */
 public final class FloatingRateNames {
-
+  /**
+   * Constant for AED-EIBOR.
+   */
+  public static final FloatingRateName AED_EIBOR = FloatingRateName.of("AED-EIBOR");
   /**
    * Constant for GBP-LIBOR.
    */

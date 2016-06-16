@@ -220,6 +220,10 @@ public final class Country
    */
   public static final Country TH = of("TH");
   /**
+   * The country 'AE' - United Arab Emirates.
+   */
+  public static final Country UA = of("UA");  
+  /**
    * The country 'ZA' - South Africa.
    */
   public static final Country ZA = of("ZA");

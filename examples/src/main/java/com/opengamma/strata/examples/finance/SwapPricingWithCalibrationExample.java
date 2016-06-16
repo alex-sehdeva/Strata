@@ -35,7 +35,6 @@ import com.opengamma.strata.loader.csv.RatesCalibrationCsvLoader;
 import com.opengamma.strata.market.curve.CurveGroupDefinition;
 import com.opengamma.strata.market.curve.CurveGroupName;
 import com.opengamma.strata.market.observable.QuoteId;
-import com.opengamma.strata.measure.AdvancedMeasures;
 import com.opengamma.strata.measure.Measures;
 import com.opengamma.strata.measure.StandardComponents;
 import com.opengamma.strata.measure.rate.RatesMarketDataLookup;
@@ -62,7 +61,8 @@ public class SwapPricingWithCalibrationExample {
   /**
    * The curve group name.
    */
-  private static final CurveGroupName CURVE_GROUP_NAME = CurveGroupName.of("USD-DSCON-LIBOR3M");
+  //private static final CurveGroupName CURVE_GROUP_NAME = CurveGroupName.of("USD-DSCON-LIBOR3M");
+  private static final CurveGroupName CURVE_GROUP_NAME = CurveGroupName.of("AED-DSCON-EIBOR3M");
   /**
    * The location of the data files.
    */
@@ -92,7 +92,7 @@ public class SwapPricingWithCalibrationExample {
    */
   private static final ResourceLocator FIXINGS_RESOURCE =
       ResourceLocator
-          .of(ResourceLocator.FILE_URL_PREFIX + PATH_CONFIG + "example-marketdata/historical-fixings/usd-libor-3m.csv");
+          .of(ResourceLocator.FILE_URL_PREFIX + PATH_CONFIG + "example-marketdata/historical-fixings/aed-eibor-3m.csv");
 
   /**
    * Runs the example, pricing the instruments, producing the output as an ASCII table.
@@ -117,11 +117,11 @@ public class SwapPricingWithCalibrationExample {
         Column.of(Measures.LEG_INITIAL_NOTIONAL),
         Column.of(Measures.PRESENT_VALUE),
         Column.of(Measures.LEG_PRESENT_VALUE),
-        Column.of(Measures.PV01_CALIBRATED_SUM),
+        Column.of(Measures.PV01),
         Column.of(Measures.PAR_RATE),
         Column.of(Measures.ACCRUED_INTEREST),
-        Column.of(Measures.PV01_CALIBRATED_BUCKETED),
-        Column.of(AdvancedMeasures.PV01_SEMI_PARALLEL_GAMMA_BUCKETED));
+        Column.of(Measures.BUCKETED_PV01),
+        Column.of(Measures.BUCKETED_GAMMA_PV01));
 
     // load quotes
     ImmutableMap<QuoteId, Double> quotes = QuotesCsvLoader.load(VAL_DATE, QUOTES_RESOURCE);
@@ -180,15 +180,15 @@ public class SwapPricingWithCalibrationExample {
         .id(StandardId.of("example", "1"))
         .addAttribute(TradeAttributeType.DESCRIPTION, "Fixed vs Libor 3m")
         .counterparty(StandardId.of("example", "A"))
-        .settlementDate(LocalDate.of(2014, 9, 12))
+        .settlementDate(LocalDate.of(2015, 7, 18))
         .build();
-    return FixedIborSwapConventions.USD_FIXED_6M_LIBOR_3M.toTrade(
+    return FixedIborSwapConventions.AED_FIXED_1Y_EIBOR_3M.toTrade(
         tradeInfo,
-        LocalDate.of(2014, 9, 12), // the start date
-        LocalDate.of(2021, 9, 12), // the end date
-        BuySell.BUY,               // indicates wheter this trade is a buy or sell
-        100_000_000,               // the notional amount  
-        0.015);                    // the fixed interest rate
+        LocalDate.of(2015, 7, 18), // the start date
+        LocalDate.of(2020, 7, 18), // the end date
+        BuySell.SELL,               // indicates wheter this trade is a buy or sell
+        10_000_000,               // the notional amount  
+        0.02594078);                    // the fixed interest rate
   }
 
 }

@@ -45,6 +45,11 @@ public final class FxIndices {
    * The FX index for conversion from USD to CHF, as defined by the WM company
    * "Closing Spot rates".
    */
+  public static final FxIndex USD_AED_WM = FxIndex.of("USD/AED-WM");
+  /**
+   * The FX index for conversion from USD to CHF, as defined by the WM company
+   * "Closing Spot rates".
+   */
   public static final FxIndex USD_CHF_WM = FxIndex.of("USD/CHF-WM");
   /**
    * The FX index for conversion from GBP to USD, as defined by the WM company

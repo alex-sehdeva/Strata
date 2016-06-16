@@ -21,6 +21,15 @@ public final class FixedIborSwapConventions {
 
   //-------------------------------------------------------------------------
   /**
+   * The 'AED-FIXED-3M-EIBOR-3M' swap convention.
+   * <p>
+   * AED(UA) vanilla fixed vs EIBOR 3M swap.
+   * The fixed leg pays every 1 year with day count 'ACT/360'.
+   */
+  public static final FixedIborSwapConvention AED_FIXED_1Y_EIBOR_3M =
+      FixedIborSwapConvention.of(StandardFixedIborSwapConventions.AED_FIXED_1Y_EIBOR_3M.getName());
+  
+  /**
    * The 'USD-FIXED-6M-LIBOR-3M' swap convention.
    * <p>
    * USD(NY) vanilla fixed vs LIBOR 3M swap.
