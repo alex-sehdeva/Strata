@@ -3,57 +3,54 @@
  *
  * Please see distribution for license.
  */
-package com.opengamma.strata.measure.fra;
+package com.opengamma.strata.measure.fx;
 
-import com.opengamma.strata.basics.currency.CurrencyAmount;
+import com.opengamma.strata.basics.currency.FxRate;
 import com.opengamma.strata.basics.currency.MultiCurrencyAmount;
-import com.opengamma.strata.data.scenario.CurrencyValuesArray;
 import com.opengamma.strata.data.scenario.MultiCurrencyValuesArray;
 import com.opengamma.strata.data.scenario.ScenarioArray;
 import com.opengamma.strata.data.scenario.ScenarioMarketData;
 import com.opengamma.strata.data.scenario.ValuesArray;
-import com.opengamma.strata.market.amount.CashFlows;
-import com.opengamma.strata.market.explain.ExplainMap;
 import com.opengamma.strata.market.param.CurrencyParameterSensitivities;
 import com.opengamma.strata.measure.rate.RatesMarketDataLookup;
-import com.opengamma.strata.pricer.fra.DiscountingFraTradePricer;
+import com.opengamma.strata.pricer.fx.DiscountingFxSingleTradePricer;
 import com.opengamma.strata.pricer.rate.RatesProvider;
-import com.opengamma.strata.product.fra.FraTrade;
-import com.opengamma.strata.product.fra.ResolvedFraTrade;
+import com.opengamma.strata.product.fx.FxSingleTrade;
+import com.opengamma.strata.product.fx.ResolvedFxSingleTrade;
 
 /**
- * Calculates pricing and risk measures for forward rate agreement (FRA) trades.
+ * Calculates pricing and risk measures for single FX trades.
  * <p>
- * This provides a high-level entry point for FRA pricing and risk measures.
+ * This provides a high-level entry point for FX pricing and risk measures.
  * <p>
- * Each method takes a {@link ResolvedFraTrade}, whereas application code will
- * typically work with {@link FraTrade}. Call
- * {@link FraTrade#resolve(com.opengamma.strata.basics.ReferenceData) FraTrade::resolve(ReferenceData)}
- * to convert {@code FraTrade} to {@code ResolvedFraTrade}.
+ * Each method takes a {@link ResolvedFxSingleTrade}, whereas application code will
+ * typically work with {@link FxSingleTrade}. Call
+ * {@link FxSingleTrade#resolve(com.opengamma.strata.basics.ReferenceData) FxSingleTrade::resolve(ReferenceData)}
+ * to convert {@code FxSingleTrade} to {@code ResolvedFxSingleTrade}.
  */
-public class FraTradeCalculations {
+public class FxSingleTradeCalculations {
 
   /**
    * Default implementation.
    */
-  public static final FraTradeCalculations DEFAULT = new FraTradeCalculations(
-      DiscountingFraTradePricer.DEFAULT);
+  public static final FxSingleTradeCalculations DEFAULT = new FxSingleTradeCalculations(
+      DiscountingFxSingleTradePricer.DEFAULT);
 
   /**
-   * Pricer for {@link ResolvedFraTrade}.
+   * Pricer for {@link ResolvedFxSingleTrade}.
    */
-  private final FraMeasureCalculations calc;
+  private final FxSingleMeasureCalculations calc;
 
   /**
    * Creates an instance.
    * <p>
    * In most cases, applications should use the {@link #DEFAULT} instance.
    * 
-   * @param tradePricer  the pricer for {@link ResolvedFraTrade}
+   * @param tradePricer  the pricer for {@link ResolvedFxSingleTrade}
    */
-  public FraTradeCalculations(
-      DiscountingFraTradePricer tradePricer) {
-    this.calc = new FraMeasureCalculations(tradePricer);
+  public FxSingleTradeCalculations(
+      DiscountingFxSingleTradePricer tradePricer) {
+    this.calc = new FxSingleMeasureCalculations(tradePricer);
   }
 
   //-------------------------------------------------------------------------
@@ -65,8 +62,8 @@ public class FraTradeCalculations {
    * @param marketData  the market data
    * @return the present value, one entry per scenario
    */
-  public CurrencyValuesArray presentValue(
-      ResolvedFraTrade trade,
+  public MultiCurrencyValuesArray presentValue(
+      ResolvedFxSingleTrade trade,
       RatesMarketDataLookup lookup,
       ScenarioMarketData marketData) {
 
@@ -80,8 +77,8 @@ public class FraTradeCalculations {
    * @param ratesProvider  the market data
    * @return the present value
    */
-  public CurrencyAmount presentValue(
-      ResolvedFraTrade trade,
+  public MultiCurrencyAmount presentValue(
+      ResolvedFxSingleTrade trade,
       RatesProvider ratesProvider) {
 
     return calc.presentValue(trade, ratesProvider);
@@ -89,49 +86,10 @@ public class FraTradeCalculations {
 
   //-------------------------------------------------------------------------
   /**
-   * Explains the present value calculation across one or more scenarios.
-   * <p>
-   * This provides a breakdown of how
-   * {@linkplain #presentValue(ResolvedFraTrade, RatesMarketDataLookup, ScenarioMarketData) present value}
-   * was calculated, typically used for debugging and validation.
-   * 
-   * @param trade  the trade
-   * @param lookup  the lookup used to query the market data
-   * @param marketData  the market data
-   * @return the present value explanation, one entry per scenario
-   */
-  public ScenarioArray<ExplainMap> explainPresentValue(
-      ResolvedFraTrade trade,
-      RatesMarketDataLookup lookup,
-      ScenarioMarketData marketData) {
-
-    return calc.explainPresentValue(trade, lookup.marketDataView(marketData));
-  }
-
-  /**
-   * Explains the present value calculation for a single set of market data.
-   * <p>
-   * This provides a breakdown of how
-   * {@linkplain #presentValue(ResolvedFraTrade, RatesMarketDataLookup, ScenarioMarketData) present value}
-   * was calculated, typically used for debugging and validation.
-   * 
-   * @param trade  the trade
-   * @param ratesProvider  the market data
-   * @return the present value explanation
-   */
-  public ExplainMap explainPresentValue(
-      ResolvedFraTrade trade,
-      RatesProvider ratesProvider) {
-
-    return calc.explainPresentValue(trade, ratesProvider);
-  }
-
-  //-------------------------------------------------------------------------
-  /**
    * Calculates present value sensitivity across one or more scenarios.
    * <p>
    * This is the sensitivity of
-   * {@linkplain #presentValue(ResolvedFraTrade, RatesMarketDataLookup, ScenarioMarketData) present value}
+   * {@linkplain #presentValue(ResolvedFxSingleTrade, RatesMarketDataLookup, ScenarioMarketData) present value}
    * to a one basis point shift in the calibrated curves.
    * The result is the sum of the sensitivities of all affected curves.
    * 
@@ -141,7 +99,7 @@ public class FraTradeCalculations {
    * @return the present value sensitivity, one entry per scenario
    */
   public MultiCurrencyValuesArray pv01CalibratedSum(
-      ResolvedFraTrade trade,
+      ResolvedFxSingleTrade trade,
       RatesMarketDataLookup lookup,
       ScenarioMarketData marketData) {
 
@@ -152,7 +110,7 @@ public class FraTradeCalculations {
    * Calculates present value sensitivity for a single set of market data.
    * <p>
    * This is the sensitivity of
-   * {@linkplain #presentValue(ResolvedFraTrade, RatesMarketDataLookup, ScenarioMarketData) present value}
+   * {@linkplain #presentValue(ResolvedFxSingleTrade, RatesMarketDataLookup, ScenarioMarketData) present value}
    * to a one basis point shift in the calibrated curves.
    * The result is the sum of the sensitivities of all affected curves.
    * 
@@ -161,7 +119,7 @@ public class FraTradeCalculations {
    * @return the present value sensitivity
    */
   public MultiCurrencyAmount pv01CalibratedSum(
-      ResolvedFraTrade trade,
+      ResolvedFxSingleTrade trade,
       RatesProvider ratesProvider) {
 
     return calc.pv01CalibratedSum(trade, ratesProvider);
@@ -172,7 +130,7 @@ public class FraTradeCalculations {
    * Calculates present value sensitivity across one or more scenarios.
    * <p>
    * This is the sensitivity of
-   * {@linkplain #presentValue(ResolvedFraTrade, RatesMarketDataLookup, ScenarioMarketData) present value}
+   * {@linkplain #presentValue(ResolvedFxSingleTrade, RatesMarketDataLookup, ScenarioMarketData) present value}
    * to a one basis point shift in the calibrated curves.
    * The result is provided for each affected curve and currency, bucketed by curve node.
    * 
@@ -182,7 +140,7 @@ public class FraTradeCalculations {
    * @return the present value sensitivity, one entry per scenario
    */
   public ScenarioArray<CurrencyParameterSensitivities> pv01CalibratedBucketed(
-      ResolvedFraTrade trade,
+      ResolvedFxSingleTrade trade,
       RatesMarketDataLookup lookup,
       ScenarioMarketData marketData) {
 
@@ -193,7 +151,7 @@ public class FraTradeCalculations {
    * Calculates present value sensitivity for a single set of market data.
    * <p>
    * This is the sensitivity of
-   * {@linkplain #presentValue(ResolvedFraTrade, RatesMarketDataLookup, ScenarioMarketData) present value}
+   * {@linkplain #presentValue(ResolvedFxSingleTrade, RatesMarketDataLookup, ScenarioMarketData) present value}
    * to a one basis point shift in the calibrated curves.
    * The result is provided for each affected curve and currency, bucketed by curve node.
    * 
@@ -202,7 +160,7 @@ public class FraTradeCalculations {
    * @return the present value sensitivity
    */
   public CurrencyParameterSensitivities pv01CalibratedBucketed(
-      ResolvedFraTrade trade,
+      ResolvedFxSingleTrade trade,
       RatesProvider ratesProvider) {
 
     return calc.pv01CalibratedBucketed(trade, ratesProvider);
@@ -213,7 +171,7 @@ public class FraTradeCalculations {
    * Calculates present value sensitivity across one or more scenarios.
    * <p>
    * This is the sensitivity of
-   * {@linkplain #presentValue(ResolvedFraTrade, RatesMarketDataLookup, ScenarioMarketData) present value}
+   * {@linkplain #presentValue(ResolvedFxSingleTrade, RatesMarketDataLookup, ScenarioMarketData) present value}
    * to a one basis point shift in the market quotes used to calibrate the curves.
    * The result is the sum of the sensitivities of all affected curves.
    * 
@@ -223,7 +181,7 @@ public class FraTradeCalculations {
    * @return the present value sensitivity, one entry per scenario
    */
   public MultiCurrencyValuesArray pv01MarketQuoteSum(
-      ResolvedFraTrade trade,
+      ResolvedFxSingleTrade trade,
       RatesMarketDataLookup lookup,
       ScenarioMarketData marketData) {
 
@@ -234,7 +192,7 @@ public class FraTradeCalculations {
    * Calculates present value sensitivity for a single set of market data.
    * <p>
    * This is the sensitivity of
-   * {@linkplain #presentValue(ResolvedFraTrade, RatesMarketDataLookup, ScenarioMarketData) present value}
+   * {@linkplain #presentValue(ResolvedFxSingleTrade, RatesMarketDataLookup, ScenarioMarketData) present value}
    * to a one basis point shift in the market quotes used to calibrate the curves.
    * The result is the sum of the sensitivities of all affected curves.
    * 
@@ -243,7 +201,7 @@ public class FraTradeCalculations {
    * @return the present value sensitivity
    */
   public MultiCurrencyAmount pv01MarketQuoteSum(
-      ResolvedFraTrade trade,
+      ResolvedFxSingleTrade trade,
       RatesProvider ratesProvider) {
 
     return calc.pv01MarketQuoteSum(trade, ratesProvider);
@@ -254,7 +212,7 @@ public class FraTradeCalculations {
    * Calculates present value sensitivity across one or more scenarios.
    * <p>
    * This is the sensitivity of
-   * {@linkplain #presentValue(ResolvedFraTrade, RatesMarketDataLookup, ScenarioMarketData) present value}
+   * {@linkplain #presentValue(ResolvedFxSingleTrade, RatesMarketDataLookup, ScenarioMarketData) present value}
    * to a one basis point shift in the market quotes used to calibrate the curves.
    * The result is provided for each affected curve and currency, bucketed by curve node.
    * 
@@ -264,7 +222,7 @@ public class FraTradeCalculations {
    * @return the present value sensitivity, one entry per scenario
    */
   public ScenarioArray<CurrencyParameterSensitivities> pv01MarketQuoteBucketed(
-      ResolvedFraTrade trade,
+      ResolvedFxSingleTrade trade,
       RatesMarketDataLookup lookup,
       ScenarioMarketData marketData) {
 
@@ -275,7 +233,7 @@ public class FraTradeCalculations {
    * Calculates present value sensitivity for a single set of market data.
    * <p>
    * This is the sensitivity of
-   * {@linkplain #presentValue(ResolvedFraTrade, RatesMarketDataLookup, ScenarioMarketData) present value}
+   * {@linkplain #presentValue(ResolvedFxSingleTrade, RatesMarketDataLookup, ScenarioMarketData) present value}
    * to a one basis point shift in the market quotes used to calibrate the curves.
    * The result is provided for each affected curve and currency, bucketed by curve node.
    * 
@@ -284,41 +242,10 @@ public class FraTradeCalculations {
    * @return the present value sensitivity
    */
   public CurrencyParameterSensitivities pv01MarketQuoteBucketed(
-      ResolvedFraTrade trade,
+      ResolvedFxSingleTrade trade,
       RatesProvider ratesProvider) {
 
     return calc.pv01MarketQuoteBucketed(trade, ratesProvider);
-  }
-
-  //-------------------------------------------------------------------------
-  /**
-   * Calculates par rate across one or more scenarios.
-   * 
-   * @param trade  the trade
-   * @param lookup  the lookup used to query the market data
-   * @param marketData  the market data
-   * @return the par rate, one entry per scenario
-   */
-  public ValuesArray parRate(
-      ResolvedFraTrade trade,
-      RatesMarketDataLookup lookup,
-      ScenarioMarketData marketData) {
-
-    return calc.parRate(trade, lookup.marketDataView(marketData));
-  }
-
-  /**
-   * Calculates par rate for a single set of market data.
-   * 
-   * @param trade  the trade
-   * @param ratesProvider  the market data
-   * @return the par rate
-   */
-  public double parRate(
-      ResolvedFraTrade trade,
-      RatesProvider ratesProvider) {
-
-    return calc.parRate(trade, ratesProvider);
   }
 
   //-------------------------------------------------------------------------
@@ -331,7 +258,7 @@ public class FraTradeCalculations {
    * @return the par spread, one entry per scenario
    */
   public ValuesArray parSpread(
-      ResolvedFraTrade trade,
+      ResolvedFxSingleTrade trade,
       RatesMarketDataLookup lookup,
       ScenarioMarketData marketData) {
 
@@ -346,45 +273,10 @@ public class FraTradeCalculations {
    * @return the par spread
    */
   public double parSpread(
-      ResolvedFraTrade trade,
+      ResolvedFxSingleTrade trade,
       RatesProvider ratesProvider) {
 
     return calc.parSpread(trade, ratesProvider);
-  }
-
-  //-------------------------------------------------------------------------
-  /**
-   * Calculates cash flows across one or more scenarios.
-   * <p>
-   * The cash flows provide details about the payments of the trade.
-   * 
-   * @param trade  the trade
-   * @param lookup  the lookup used to query the market data
-   * @param marketData  the market data
-   * @return the cash flows, one entry per scenario
-   */
-  public ScenarioArray<CashFlows> cashFlows(
-      ResolvedFraTrade trade,
-      RatesMarketDataLookup lookup,
-      ScenarioMarketData marketData) {
-
-    return calc.cashFlows(trade, lookup.marketDataView(marketData));
-  }
-
-  /**
-   * Calculates cash flows for a single set of market data.
-   * <p>
-   * The cash flows provide details about the payments of the trade.
-   * 
-   * @param trade  the trade
-   * @param ratesProvider  the market data
-   * @return the cash flows
-   */
-  public CashFlows cashFlows(
-      ResolvedFraTrade trade,
-      RatesProvider ratesProvider) {
-
-    return calc.cashFlows(trade, ratesProvider);
   }
 
   //-------------------------------------------------------------------------
@@ -399,7 +291,7 @@ public class FraTradeCalculations {
    * @return the currency exposure, one entry per scenario
    */
   public MultiCurrencyValuesArray currencyExposure(
-      ResolvedFraTrade trade,
+      ResolvedFxSingleTrade trade,
       RatesMarketDataLookup lookup,
       ScenarioMarketData marketData) {
 
@@ -416,7 +308,7 @@ public class FraTradeCalculations {
    * @return the currency exposure
    */
   public MultiCurrencyAmount currencyExposure(
-      ResolvedFraTrade trade,
+      ResolvedFxSingleTrade trade,
       RatesProvider ratesProvider) {
 
     return calc.currencyExposure(trade, ratesProvider);
@@ -433,8 +325,8 @@ public class FraTradeCalculations {
    * @param marketData  the market data
    * @return the current cash, one entry per scenario
    */
-  public CurrencyValuesArray currentCash(
-      ResolvedFraTrade trade,
+  public MultiCurrencyValuesArray currentCash(
+      ResolvedFxSingleTrade trade,
       RatesMarketDataLookup lookup,
       ScenarioMarketData marketData) {
 
@@ -450,11 +342,42 @@ public class FraTradeCalculations {
    * @param ratesProvider  the market data
    * @return the current cash
    */
-  public CurrencyAmount currentCash(
-      ResolvedFraTrade trade,
+  public MultiCurrencyAmount currentCash(
+      ResolvedFxSingleTrade trade,
       RatesProvider ratesProvider) {
 
     return calc.currentCash(trade, ratesProvider);
+  }
+
+  //-------------------------------------------------------------------------
+  /**
+   * Calculates the forward FX rate across one or more scenarios.
+   * 
+   * @param trade  the trade
+   * @param lookup  the lookup used to query the market data
+   * @param marketData  the market data
+   * @return the current cash, one entry per scenario
+   */
+  public ScenarioArray<FxRate> forwardFxRate(
+      ResolvedFxSingleTrade trade,
+      RatesMarketDataLookup lookup,
+      ScenarioMarketData marketData) {
+
+    return calc.forwardFxRate(trade, lookup.marketDataView(marketData));
+  }
+
+  /**
+   * Calculates the forward FX rate for a single set of market data.
+   * 
+   * @param trade  the trade
+   * @param ratesProvider  the market data
+   * @return the current cash
+   */
+  public FxRate forwardFxRate(
+      ResolvedFxSingleTrade trade,
+      RatesProvider ratesProvider) {
+
+    return calc.forwardFxRate(trade, ratesProvider);
   }
 
 }
