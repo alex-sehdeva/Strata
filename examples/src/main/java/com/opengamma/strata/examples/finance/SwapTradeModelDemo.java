@@ -222,7 +222,7 @@ public class SwapTradeModelDemo {
             .build())
         .product(Swap.of(payLeg, receiveLeg))
         .build();
-
+/*
     System.out.println("===== Vanilla fixed vs Libor3m =====");
     System.out.println(JodaBeanSer.PRETTY.xmlWriter().write(trade));
     System.out.println();
@@ -232,6 +232,16 @@ public class SwapTradeModelDemo {
     System.out.println("===== Vanilla fixed vs Libor3m receive leg =====");
     System.out.println(JodaBeanSer.PRETTY.xmlWriter().write(receiveLeg.resolve(ReferenceData.standard())));
     System.out.println();
+*/    
+    System.out.println("===== Vanilla fixed vs Libor3m =====");
+    System.out.println(JodaBeanSer.PRETTY.jsonWriter().write(trade));
+    System.out.println();
+    System.out.println("===== Vanilla fixed vs Libor3m pay leg =====");
+    System.out.println(JodaBeanSer.PRETTY.jsonWriter().write(payLeg.resolve(ReferenceData.standard())));
+    System.out.println();
+    System.out.println("===== Vanilla fixed vs Libor3m receive leg =====");
+    System.out.println(JodaBeanSer.PRETTY.jsonWriter().write(receiveLeg.resolve(ReferenceData.standard())));
+    System.out.println();    
   }
 
 }

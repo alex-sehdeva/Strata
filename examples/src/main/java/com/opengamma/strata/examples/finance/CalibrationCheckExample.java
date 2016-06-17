@@ -16,6 +16,9 @@ import java.util.Map;
 import java.io.FileWriter;
 import java.io.IOException;
 
+import org.joda.beans.Bean;
+import org.joda.beans.ser.JodaBeanSer;
+
 import org.yaml.snakeyaml.DumperOptions;
 import org.yaml.snakeyaml.introspector.PropertyUtils;
 import org.yaml.snakeyaml.representer.Representer;
@@ -170,7 +173,16 @@ public class CalibrationCheckExample {
     }
   }
 
+  private static void beanDump(Bean bean, String outputPath) {
+    FileWriter writer;      
+    try {   
+      writer = new FileWriter(outputPath);  
+      writer.write(JodaBeanSer.PRETTY.jsonWriter().write(bean));
+      } catch (IOException e) {e.printStackTrace();}    
+  }
+  
   private static void dump(Object dumpObject, String outputPath) {
+    
     final DumperOptions yamlFormat = new DumperOptions();     
     yamlFormat.setDefaultFlowStyle(DumperOptions.FlowStyle.AUTO);     
     yamlFormat.setWidth(Integer.MAX_VALUE);     
@@ -250,6 +262,7 @@ public class CalibrationCheckExample {
     CurveId firstCurveId = (CurveId)curveIdList.toArray()[0];
     CurveName firstCurveName = firstCurveId.getCurveName();
     dump(enhancedMarketData.getValue(firstCurveId).toString(), "/home/asehdeva/curve.yaml");
+    beanDump((ImmutableMarketData)enhancedMarketData.scenario(0), "/home/asehdeva/enhanced.xml");
     
     Results results = runner.calculateSingleScenario(rules, trades, columns, enhancedMarketData, refData);
     return Pair.of(trades, results);

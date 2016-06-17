@@ -12,6 +12,8 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 
+import org.joda.beans.ser.JodaBeanSer;
+
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.opengamma.strata.basics.ReferenceData;
@@ -35,6 +37,7 @@ import com.opengamma.strata.loader.csv.RatesCalibrationCsvLoader;
 import com.opengamma.strata.market.curve.CurveGroupDefinition;
 import com.opengamma.strata.market.curve.CurveGroupName;
 import com.opengamma.strata.market.observable.QuoteId;
+import com.opengamma.strata.measure.AdvancedMeasures;
 import com.opengamma.strata.measure.Measures;
 import com.opengamma.strata.measure.StandardComponents;
 import com.opengamma.strata.measure.rate.RatesMarketDataLookup;
@@ -57,7 +60,7 @@ public class SwapPricingWithCalibrationExample {
   /**
    * The valuation date.
    */
-  private static final LocalDate VAL_DATE = LocalDate.of(2015, 7, 21);
+  private static final LocalDate VAL_DATE = LocalDate.of(2016, 6, 15);
   /**
    * The curve group name.
    */
@@ -117,11 +120,11 @@ public class SwapPricingWithCalibrationExample {
         Column.of(Measures.LEG_INITIAL_NOTIONAL),
         Column.of(Measures.PRESENT_VALUE),
         Column.of(Measures.LEG_PRESENT_VALUE),
-        Column.of(Measures.PV01),
+        Column.of(Measures.PV01_CALIBRATED_SUM),
         Column.of(Measures.PAR_RATE),
         Column.of(Measures.ACCRUED_INTEREST),
-        Column.of(Measures.BUCKETED_PV01),
-        Column.of(Measures.BUCKETED_GAMMA_PV01));
+        Column.of(Measures.PV01_CALIBRATED_BUCKETED),
+        Column.of(AdvancedMeasures.PV01_SEMI_PARALLEL_GAMMA_BUCKETED));
 
     // load quotes
     ImmutableMap<QuoteId, Double> quotes = QuotesCsvLoader.load(VAL_DATE, QUOTES_RESOURCE);
@@ -165,30 +168,85 @@ public class SwapPricingWithCalibrationExample {
     TradeReportTemplate reportTemplate = ExampleData.loadTradeReportTemplate("swap-report-template");
     TradeReport tradeReport = TradeReport.of(calculationResults, reportTemplate);
     tradeReport.writeAsciiTable(System.out);
+    System.out.println("===== Calc Results XML =====");
+//    System.out.println(JodaBeanSer.PRETTY.xmlWriter().write(calculationResults));
   }
 
   //-----------------------------------------------------------------------  
   // create swap trades
   private static List<Trade> createSwapTrades() {
-    return ImmutableList.of(createVanillaFixedVsLibor3mSwap());
+    return ImmutableList.of(
+        createVanillaFixedVsLibor3mSwap1(),
+        createVanillaFixedVsLibor3mSwap2(),
+        createVanillaFixedVsLibor3mSwap3(),
+        createVanillaFixedVsLibor3mSwap4()
+        );
   }
 
   //-----------------------------------------------------------------------  
   // create a vanilla fixed vs libor 3m swap
-  private static Trade createVanillaFixedVsLibor3mSwap() {
+  private static Trade createVanillaFixedVsLibor3mSwap1() {
     TradeInfo tradeInfo = TradeInfo.builder()
         .id(StandardId.of("example", "1"))
         .addAttribute(TradeAttributeType.DESCRIPTION, "Fixed vs Libor 3m")
         .counterparty(StandardId.of("example", "A"))
-        .settlementDate(LocalDate.of(2015, 7, 18))
+        .settlementDate(LocalDate.of(2016, 6, 15))
         .build();
     return FixedIborSwapConventions.AED_FIXED_1Y_EIBOR_3M.toTrade(
         tradeInfo,
-        LocalDate.of(2015, 7, 18), // the start date
-        LocalDate.of(2020, 7, 18), // the end date
+        LocalDate.of(2016, 5, 28), // the start date
+        LocalDate.of(2018, 5, 28), // the end date
+        BuySell.BUY,               // indicates wheter this trade is a buy or sell
+        150_000_000,               // the notional amount  
+        0.0185);                    // the fixed interest rate
+  }
+  
+  private static Trade createVanillaFixedVsLibor3mSwap2() {
+    TradeInfo tradeInfo = TradeInfo.builder()
+        .id(StandardId.of("example", "2"))
+        .addAttribute(TradeAttributeType.DESCRIPTION, "Fixed vs Libor 3m")
+        .counterparty(StandardId.of("example", "A"))
+        .settlementDate(LocalDate.of(2016, 6, 15))
+        .build();
+    return FixedIborSwapConventions.AED_FIXED_1Y_EIBOR_3M.toTrade(
+        tradeInfo,
+        LocalDate.of(2016, 6, 18), // the start date
+        LocalDate.of(2026, 6, 18), // the end date
         BuySell.SELL,               // indicates wheter this trade is a buy or sell
-        10_000_000,               // the notional amount  
-        0.02594078);                    // the fixed interest rate
+        21_000_000,               // the notional amount  
+        0.03657);                    // the fixed interest rate
+  }
+  
+  private static Trade createVanillaFixedVsLibor3mSwap3() {
+    TradeInfo tradeInfo = TradeInfo.builder()
+        .id(StandardId.of("example", "3"))
+        .addAttribute(TradeAttributeType.DESCRIPTION, "Fixed vs Libor 3m")
+        .counterparty(StandardId.of("example", "A"))
+        .settlementDate(LocalDate.of(2016, 6, 15))
+        .build();
+    return FixedIborSwapConventions.AED_FIXED_1Y_EIBOR_3M.toTrade(
+        tradeInfo,
+        LocalDate.of(2016, 6, 11), // the start date
+        LocalDate.of(2018, 6, 11), // the end date
+        BuySell.BUY,               // indicates wheter this trade is a buy or sell
+        187_000_000,               // the notional amount  
+        0.0189);                    // the fixed interest rate
+  }
+  
+  private static Trade createVanillaFixedVsLibor3mSwap4() {
+    TradeInfo tradeInfo = TradeInfo.builder()
+        .id(StandardId.of("example", "4"))
+        .addAttribute(TradeAttributeType.DESCRIPTION, "Fixed vs Libor 3m")
+        .counterparty(StandardId.of("example", "A"))
+        .settlementDate(LocalDate.of(2016, 6, 15))
+        .build();
+    return FixedIborSwapConventions.AED_FIXED_1Y_EIBOR_3M.toTrade(
+        tradeInfo,
+        LocalDate.of(2016, 5, 12), // the start date
+        LocalDate.of(2018, 5, 12), // the end date
+        BuySell.BUY,               // indicates wheter this trade is a buy or sell
+        73_460_000,               // the notional amount  
+        0.018035);                    // the fixed interest rate
   }
 
 }
