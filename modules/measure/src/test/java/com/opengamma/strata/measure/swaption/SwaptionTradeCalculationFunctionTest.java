@@ -8,7 +8,6 @@ package com.opengamma.strata.measure.swaption;
 import static com.opengamma.strata.basics.date.DayCounts.ACT_360;
 import static com.opengamma.strata.basics.date.HolidayCalendarIds.GBLO;
 import static com.opengamma.strata.basics.date.HolidayCalendarIds.USNY;
-import static com.opengamma.strata.collect.TestHelper.coverPrivateConstructor;
 import static com.opengamma.strata.product.common.LongShort.LONG;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -48,7 +47,7 @@ import com.opengamma.strata.measure.curve.TestMarketDataMap;
 import com.opengamma.strata.measure.rate.RatesMarketDataLookup;
 import com.opengamma.strata.pricer.rate.RatesProvider;
 import com.opengamma.strata.pricer.swaption.NormalSwaptionExpiryTenorVolatilities;
-import com.opengamma.strata.pricer.swaption.NormalSwaptionPhysicalTradePricer;
+import com.opengamma.strata.pricer.swaption.NormalSwaptionTradePricer;
 import com.opengamma.strata.pricer.swaption.SwaptionNormalVolatilityDataSets;
 import com.opengamma.strata.pricer.swaption.SwaptionVolatilitiesId;
 import com.opengamma.strata.product.common.BuySell;
@@ -88,18 +87,19 @@ public class SwaptionTradeCalculationFunctionTest {
       .build();
   private static final Payment PREMIUM = Payment.of(CurrencyAmount.of(Currency.USD, -3150000d), LocalDate.of(2014, 3, 17));
   public static final SwaptionTrade TRADE = SwaptionTrade.builder().premium(PREMIUM).product(SWAPTION).build();
+  public static final ResolvedSwaptionTrade RTRADE = TRADE.resolve(REF_DATA);
   private static final Currency CURRENCY = Currency.USD;
   private static final IborIndex INDEX = IborIndices.USD_LIBOR_3M;
 
-  private static final NormalSwaptionExpiryTenorVolatilities NORMAL_VOL_SWAPTION_PROVIDER_USD =
+  public static final NormalSwaptionExpiryTenorVolatilities NORMAL_VOL_SWAPTION_PROVIDER_USD =
       SwaptionNormalVolatilityDataSets.NORMAL_VOL_SWAPTION_PROVIDER_USD_STD;
   private static final CurveId DISCOUNT_CURVE_ID = CurveId.of("Default", "Discount");
   private static final CurveId FORWARD_CURVE_ID = CurveId.of("Default", "Forward");
   private static final SwaptionVolatilitiesId VOL_ID = SwaptionVolatilitiesId.of("SwaptionVols.Normal.USD");
-  private static final RatesMarketDataLookup RATES_LOOKUP = RatesMarketDataLookup.of(
+  static final RatesMarketDataLookup RATES_LOOKUP = RatesMarketDataLookup.of(
       ImmutableMap.of(CURRENCY, DISCOUNT_CURVE_ID),
       ImmutableMap.of(INDEX, FORWARD_CURVE_ID));
-  private static final SwaptionMarketDataLookup SWAPTION_LOOKUP = SwaptionMarketDataLookup.of(INDEX, VOL_ID);
+  static final SwaptionMarketDataLookup SWAPTION_LOOKUP = SwaptionMarketDataLookup.of(INDEX, VOL_ID);
   private static final CalculationParameters PARAMS = CalculationParameters.of(RATES_LOOKUP, SWAPTION_LOOKUP);
   private static final LocalDate VAL_DATE = NORMAL_VOL_SWAPTION_PROVIDER_USD.getValuationDate();
 
@@ -119,7 +119,7 @@ public class SwaptionTradeCalculationFunctionTest {
     SwaptionTradeCalculationFunction function = new SwaptionTradeCalculationFunction();
     ScenarioMarketData md = marketData();
     RatesProvider provider = RATES_LOOKUP.ratesProvider(md.scenario(0));
-    NormalSwaptionPhysicalTradePricer pricer = NormalSwaptionPhysicalTradePricer.DEFAULT;
+    NormalSwaptionTradePricer pricer = NormalSwaptionTradePricer.DEFAULT;
     ResolvedSwaptionTrade resolved = TRADE.resolve(REF_DATA);
     CurrencyAmount expectedPv = pricer.presentValue(resolved, provider, NORMAL_VOL_SWAPTION_PROVIDER_USD);
 
@@ -132,7 +132,7 @@ public class SwaptionTradeCalculationFunctionTest {
   }
 
   //-------------------------------------------------------------------------
-  private ScenarioMarketData marketData() {
+  static ScenarioMarketData marketData() {
     Curve curve = ConstantCurve.of(Curves.discountFactors("Test", ACT_360), 0.99);
     TestMarketDataMap md = new TestMarketDataMap(
         VAL_DATE,
@@ -142,11 +142,6 @@ public class SwaptionTradeCalculationFunctionTest {
             VOL_ID, NORMAL_VOL_SWAPTION_PROVIDER_USD),
         ImmutableMap.of());
     return md;
-  }
-
-  //-------------------------------------------------------------------------
-  public void coverage() {
-    coverPrivateConstructor(SwaptionMeasureCalculations.class);
   }
 
 }

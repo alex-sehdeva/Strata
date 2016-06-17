@@ -11,6 +11,7 @@ import com.opengamma.strata.basics.currency.CurrencyAmount;
 import com.opengamma.strata.basics.currency.MultiCurrencyAmount;
 import com.opengamma.strata.basics.currency.Payment;
 import com.opengamma.strata.collect.ArgChecker;
+import com.opengamma.strata.market.sensitivity.PointSensitivities;
 import com.opengamma.strata.market.sensitivity.PointSensitivityBuilder;
 import com.opengamma.strata.pricer.DiscountingPaymentPricer;
 import com.opengamma.strata.pricer.rate.RatesProvider;
@@ -75,11 +76,64 @@ public class VolatilitySwaptionTradePricer {
       RatesProvider ratesProvider,
       SwaptionVolatilities swaptionVolatilities) {
 
+    // product
     ResolvedSwaption product = trade.getProduct();
     CurrencyAmount pvProduct = productPricer.presentValue(product, ratesProvider, swaptionVolatilities);
+    // premium
     Payment premium = trade.getPremium();
     CurrencyAmount pvPremium = paymentPricer.presentValue(premium, ratesProvider);
+    // total
     return pvProduct.plus(pvPremium);
+  }
+
+  //-------------------------------------------------------------------------
+  /**
+   * Calculates the present value sensitivity of the swaption to the rate curves.
+   * <p>
+   * The present value sensitivity is computed in a "sticky strike" style, i.e. the sensitivity to the 
+   * curve nodes with the volatility at the swaption strike unchanged. This sensitivity does not include a potential 
+   * change of volatility due to the implicit change of forward rate or moneyness.
+   * 
+   * @param trade  the swaption trade
+   * @param ratesProvider  the rates provider
+   * @param swaptionVolatilities  the volatilities
+   * @return the point sensitivity to the rate curves
+   */
+  public PointSensitivities presentValueSensitivityRatesStickyStrike(
+      ResolvedSwaptionTrade trade,
+      RatesProvider ratesProvider,
+      SwaptionVolatilities swaptionVolatilities) {
+
+    // product
+    ResolvedSwaption product = trade.getProduct();
+    PointSensitivityBuilder pvcsProduct =
+        productPricer.presentValueSensitivityRatesStickyStrike(product, ratesProvider, swaptionVolatilities);
+    // premium
+    Payment premium = trade.getPremium();
+    PointSensitivityBuilder pvcsPremium = paymentPricer.presentValueSensitivity(premium, ratesProvider);
+    // total
+    return pvcsProduct.combinedWith(pvcsPremium).build();
+  }
+
+  //-------------------------------------------------------------------------
+  /**
+   * Calculates the present value sensitivity to the implied volatility of the swaption trade.
+   * <p>
+   * The sensitivity to the implied volatility is also called vega.
+   * 
+   * @param trade  the swaption trade
+   * @param ratesProvider  the rates provider
+   * @param swaptionVolatilities  the volatilities
+   * @return the point sensitivity to the implied volatility
+   */
+  public PointSensitivities presentValueSensitivityModelParamsVolatility(
+      ResolvedSwaptionTrade trade,
+      RatesProvider ratesProvider,
+      SwaptionVolatilities swaptionVolatilities) {
+
+    ResolvedSwaption product = trade.getProduct();
+    SwaptionSensitivity pointSens = productPricer.presentValueSensitivityModelParamsVolatility(product, ratesProvider, swaptionVolatilities);
+    return PointSensitivities.of(pointSens);
   }
 
   //-------------------------------------------------------------------------
@@ -114,52 +168,6 @@ public class VolatilitySwaptionTradePricer {
       return CurrencyAmount.of(premium.getCurrency(), premium.getAmount());
     }
     return CurrencyAmount.of(premium.getCurrency(), 0d);
-  }
-
-  //-------------------------------------------------------------------------
-  /**
-   * Calculates the present value sensitivity of the swaption to the rate curves.
-   * <p>
-   * The present value sensitivity is computed in a "sticky strike" style, i.e. the sensitivity to the 
-   * curve nodes with the volatility at the swaption strike unchanged. This sensitivity does not include a potential 
-   * change of volatility due to the implicit change of forward rate or moneyness.
-   * 
-   * @param trade  the swaption trade
-   * @param ratesProvider  the rates provider
-   * @param swaptionVolatilities  the volatilities
-   * @return the point sensitivity to the rate curves
-   */
-  public PointSensitivityBuilder presentValueSensitivityStickyStrike(
-      ResolvedSwaptionTrade trade,
-      RatesProvider ratesProvider,
-      SwaptionVolatilities swaptionVolatilities) {
-
-    ResolvedSwaption product = trade.getProduct();
-    PointSensitivityBuilder pvcsProduct =
-        productPricer.presentValueSensitivityStickyStrike(product, ratesProvider, swaptionVolatilities);
-    Payment premium = trade.getPremium();
-    PointSensitivityBuilder pvcsPremium = paymentPricer.presentValueSensitivity(premium, ratesProvider);
-    return pvcsProduct.combinedWith(pvcsPremium);
-  }
-
-  //-------------------------------------------------------------------------
-  /**
-   * Calculates the present value sensitivity to the implied volatility of the swaption trade.
-   * <p>
-   * The sensitivity to the implied volatility is also called vega.
-   * 
-   * @param trade  the swaption trade
-   * @param ratesProvider  the rates provider
-   * @param swaptionVolatilities  the volatilities
-   * @return the point sensitivity to the implied volatility
-   */
-  public SwaptionSensitivity presentValueSensitivityVolatility(
-      ResolvedSwaptionTrade trade,
-      RatesProvider ratesProvider,
-      SwaptionVolatilities swaptionVolatilities) {
-
-    ResolvedSwaption product = trade.getProduct();
-    return productPricer.presentValueSensitivityVolatility(product, ratesProvider, swaptionVolatilities);
   }
 
 }

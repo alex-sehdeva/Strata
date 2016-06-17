@@ -13,7 +13,7 @@
   </parent>  
   <groupId>com.opengamma.strata</groupId>
   <artifactId>strata-root</artifactId>
-  <version>0.15.0-SNAPSHOT</version>
+  <version>0.16.0-SNAPSHOT</version>
   <packaging>pom</packaging>
   <name>Strata-Root</name>
   <description>OpenGamma Strata root</description>
@@ -180,6 +180,9 @@
 
   <!-- ==================================================================== -->
   <properties>
+    <!-- Properties for maven-javadoc-plugin -->
+    <author>false</author>
+    <notimestamp>true</notimestamp>
     <!-- Not installed/deployed -->
     <maven.install.skip>true</maven.install.skip>
     <maven.deploy.skip>true</maven.deploy.skip>

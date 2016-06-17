@@ -51,9 +51,9 @@ import com.opengamma.strata.report.trade.TradeReport;
 import com.opengamma.strata.report.trade.TradeReportTemplate;
 
 /**
- * Example to illustrate using the engine to price a swap.
+ * Example to illustrate using the calculation API to price a swap.
  * <p>
- * This makes use of the example engine and the example market data environment.
+ * This makes use of the example market data environment.
  */
 public class SwapPricingWithCalibrationExample {
 
@@ -91,7 +91,7 @@ public class SwapPricingWithCalibrationExample {
   private static final ResourceLocator QUOTES_RESOURCE =
       ResourceLocator.of(ResourceLocator.FILE_URL_PREFIX + PATH_CONFIG + "example-calibration/quotes/quotes.csv");
   /**
-   * The location of the market quotes file.
+   * The location of the historical fixing file.
    */
   private static final ResourceLocator FIXINGS_RESOURCE =
       ResourceLocator
