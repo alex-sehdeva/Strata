@@ -42,3 +42,15 @@ Valuation Date,Symbology,Ticker,Field Name,Value
 2015-07-21,OG-Ticker,USD-FFS-20Y,MarketValue,0.0023
 2015-07-21,OG-Ticker,USD-FFS-25Y,MarketValue,0.0023
 2015-07-21,OG-Ticker,USD-FFS-30Y,MarketValue,0.0023
+2015-07-21,OG-Ticker,AED-Fixing-1M,MarketValue,0.0041143
+2015-07-21,OG-Ticker,AED-Fixing-3M,MarketValue,0.0075571
+2015-07-21,OG-Ticker,AED-FRA-3Mx6M,MarketValue,0.00915
+2015-07-21,OG-Ticker,AED-FRA-6Mx9M,MarketValue,0.0106
+2015-07-21,OG-Ticker,AED-IRS3M-1Y,MarketValue,0.01
+2015-07-21,OG-Ticker,AED-IRS3M-2Y,MarketValue,0.0146
+2015-07-21,OG-Ticker,AED-IRS3M-3Y,MarketValue,0.01835
+2015-07-21,OG-Ticker,AED-IRS3M-4Y,MarketValue,0.0219
+2015-07-21,OG-Ticker,AED-IRS3M-5Y,MarketValue,0.025
+2015-07-21,OG-Ticker,AED-IRS3M-7Y,MarketValue,0.03105
+2015-07-21,OG-Ticker,AED-IRS3M-10Y,MarketValue,0.0374
+

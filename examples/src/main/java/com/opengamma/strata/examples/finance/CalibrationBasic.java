@@ -37,6 +37,14 @@ public class CalibrationBasic {
   //private static final CurveGroupName CURVE_GROUP_NAME = CurveGroupName.of("USD-DSCON-LIBOR3M");
   private static final CurveGroupName CURVE_GROUP_NAME = CurveGroupName.of("AED-DSCON-EIBOR3M");
   /**
+   * The ibor index name.
+   */
+  private static final IborIndex IBOR_INDEX = IborIndex.of("AED-EIBOR-3M");
+  /**
+   * The ibor currency.
+   */
+  private static final Currency CURRENCY = Currency.of("AED");
+  /**
    * The location of the data files.
    */
   private static final String PATH_CONFIG = "src/main/resources/example-calibration/";
@@ -61,40 +69,60 @@ public class CalibrationBasic {
   private static final ResourceLocator QUOTES_RESOURCE =
       ResourceLocator.of(ResourceLocator.FILE_URL_PREFIX + PATH_CONFIG + "quotes/quotes.csv");
 
-
-  public static void main(String[] args) {
-    // the reference data, such as holidays and securities
+  public static void calibrate(
+      LocalDate marketDataDate, 
+      ResourceLocator quotesResource,
+      ResourceLocator groupsResource, 
+      ResourceLocator settingsResource, 
+      ResourceLocator curveResource,
+      CurveGroupName curveGroupName,
+      IborIndex iborIndex,
+      Currency iborCurrency) {
+    
     ReferenceData refData = ReferenceData.standard();
 
     // load quotes
-    ImmutableMap<QuoteId, Double> quotes = QuotesCsvLoader.load(VAL_DATE, QUOTES_RESOURCE);
+    ImmutableMap<QuoteId, Double> quotes = QuotesCsvLoader.load(marketDataDate, quotesResource);
     
     // create the market data used for building trades
-    MarketData marketData = ImmutableMarketData.builder(VAL_DATE)
-        .addValues(quotes)
-        .build();
+    MarketData marketData = ImmutableMarketData.of(marketDataDate, quotes);
     
     // load the curve definition
     List<CurveGroupDefinition> defns =
-        RatesCalibrationCsvLoader.load(GROUPS_RESOURCE, SETTINGS_RESOURCE, CALIBRATION_RESOURCE);
+        RatesCalibrationCsvLoader.load(groupsResource, settingsResource, curveResource);
 
     Map<CurveGroupName, CurveGroupDefinition> defnMap = defns.stream().collect(toMap(def -> def.getName(), def -> def));
-    CurveGroupDefinition curveGroupDefinition = defnMap.get(CURVE_GROUP_NAME);
+    CurveGroupDefinition curveGroupDefinition = defnMap.get(curveGroupName);
     
     CurveCalibrator curveCalibrator = CurveCalibrator.standard();
     
     // dummy out historical fixings, these are not needed in this context
-    LocalDateDoubleTimeSeries localDateDoubleTimeSeries = LocalDateDoubleTimeSeries.of(VAL_DATE, 0);
+    LocalDateDoubleTimeSeries localDateDoubleTimeSeries = LocalDateDoubleTimeSeries.of(marketDataDate, 0);
     Map<Index, LocalDateDoubleTimeSeries> timeSeries = new HashMap<>();
-    timeSeries.put(IborIndex.of("AED-EIBOR-3M"), localDateDoubleTimeSeries);
+    timeSeries.put(iborIndex, localDateDoubleTimeSeries);
     
-    ImmutableRatesProvider immutableRatesProvider = curveCalibrator.calibrate(curveGroupDefinition, VAL_DATE, marketData, refData, timeSeries);
+    ImmutableRatesProvider immutableRatesProvider = curveCalibrator.calibrate(curveGroupDefinition, marketDataDate, marketData, refData, timeSeries);
     
-    DiscountFactors discountFactors = immutableRatesProvider.discountFactors(Currency.of("AED"));
+    DiscountFactors discountFactors = immutableRatesProvider.discountFactors(iborCurrency);
     
     System.out.println(discountFactors.zeroRate(0));
     System.out.println(discountFactors.zeroRate(0.25));
     System.out.println(discountFactors.zeroRate(0.5));
     System.out.println(discountFactors.zeroRate(1));
+    
+    
+  }
+
+  public static void main(String[] args) {
+    
+    calibrate(
+        VAL_DATE, 
+        QUOTES_RESOURCE,
+        GROUPS_RESOURCE, 
+        SETTINGS_RESOURCE, 
+        CALIBRATION_RESOURCE,
+        CURVE_GROUP_NAME,
+        IBOR_INDEX,
+        CURRENCY);
   }  
 }
