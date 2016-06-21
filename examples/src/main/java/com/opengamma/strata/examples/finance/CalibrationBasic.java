@@ -69,7 +69,7 @@ public class CalibrationBasic {
   private static final ResourceLocator QUOTES_RESOURCE =
       ResourceLocator.of(ResourceLocator.FILE_URL_PREFIX + PATH_CONFIG + "quotes/quotes.csv");
 
-  public static void calibrate(
+  public static void calibrate_og(
       LocalDate marketDataDate, 
       ResourceLocator quotesResource,
       ResourceLocator groupsResource, 
@@ -112,10 +112,53 @@ public class CalibrationBasic {
     
     
   }
+  
+  /**
+   * Calibrate using string and integer inputs
+   */  
+  public static void calibrate_str(
+      Integer marketDataDateYYYY,
+      Integer marketDataDateMM,
+      Integer marketDataDateDD,
+      String pathConfig,
+      String quotesResource,
+      String groupsResource, 
+      String settingsResource, 
+      String curveResource,
+      String curveGroupName,
+      String iborIndex,
+      String iborCurrency) {
+    
+    /**
+     * Calibrate using opengamma object inputs
+     */  
+    calibrate_og(
+        LocalDate.of(marketDataDateYYYY, marketDataDateMM, marketDataDateDD), 
+        ResourceLocator.of(ResourceLocator.FILE_URL_PREFIX + pathConfig + quotesResource),
+        ResourceLocator.of(ResourceLocator.FILE_URL_PREFIX + pathConfig + groupsResource),        
+        ResourceLocator.of(ResourceLocator.FILE_URL_PREFIX + pathConfig + settingsResource),
+        ResourceLocator.of(ResourceLocator.FILE_URL_PREFIX + pathConfig + curveResource),        
+        CurveGroupName.of(curveGroupName),
+        IborIndex.of(iborIndex),
+        Currency.of(iborCurrency));
+  }
 
   public static void main(String[] args) {
-    
-    calibrate(
+
+    calibrate_str(
+        2015,
+        7,
+        21,
+        "src/main/resources/example-calibration/",
+        "quotes/quotes.csv",
+        "curves/groups.csv", 
+        "curves/settings.csv", 
+        "curves/calibrations.csv",
+        "AED-DSCON-EIBOR3M",
+        "AED-EIBOR-3M",
+        "AED");
+    /*
+    calibrate_og(
         VAL_DATE, 
         QUOTES_RESOURCE,
         GROUPS_RESOURCE, 
@@ -124,5 +167,6 @@ public class CalibrationBasic {
         CURVE_GROUP_NAME,
         IBOR_INDEX,
         CURRENCY);
+        */
   }  
 }
