@@ -13,25 +13,8 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 
-import java.io.FileWriter;
-import java.io.IOException;
-
-import org.joda.beans.Bean;
-import org.joda.beans.ser.JodaBeanSer;
-
-import org.yaml.snakeyaml.DumperOptions;
-import org.yaml.snakeyaml.introspector.PropertyUtils;
-import org.yaml.snakeyaml.representer.Representer;
-import org.yaml.snakeyaml.constructor.Constructor;
-import org.yaml.snakeyaml.Yaml;
-
-import com.opengamma.strata.market.curve.CurveId;
-import com.opengamma.strata.market.curve.CurveName;
-import com.opengamma.strata.data.MarketDataId;
-
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
 import com.opengamma.strata.basics.ReferenceData;
 import com.opengamma.strata.basics.currency.CurrencyAmount;
 import com.opengamma.strata.basics.currency.MultiCurrencyAmount;
@@ -173,29 +156,7 @@ public class CalibrationCheckExample {
     }
   }
 
-  private static void beanDump(Bean bean, String outputPath) {
-    FileWriter writer;      
-    try {   
-      writer = new FileWriter(outputPath);  
-      writer.write(JodaBeanSer.PRETTY.jsonWriter().write(bean));
-      } catch (IOException e) {e.printStackTrace();}    
-  }
-  
-  private static void dump(Object dumpObject, String outputPath) {
-    
-    final DumperOptions yamlFormat = new DumperOptions();     
-    yamlFormat.setDefaultFlowStyle(DumperOptions.FlowStyle.AUTO);     
-    yamlFormat.setWidth(Integer.MAX_VALUE);     
-    final Yaml yaml = new Yaml(yamlFormat);     
-    FileWriter writer;      
-    try {   
-      writer = new FileWriter(outputPath);  
-      yaml.dump(dumpObject, writer);  
-      } catch (IOException e) {   
-        // TODO Auto-generated catch block  
-        e.printStackTrace();  
-        }    
-  }
+
   //-------------------------------------------------------------------------
   // setup calculation runner component, which needs life-cycle management
   // a typical application might use dependency injection to obtain the instance
@@ -256,13 +217,6 @@ public class CalibrationCheckExample {
     MarketDataRequirements reqs = MarketDataRequirements.of(rules, trades, columns, refData);
     ScenarioMarketData enhancedMarketData =
         marketDataFactory().buildMarketData(reqs, marketDataConfig, marketSnapshot, refData);
-    
-    // Alex codes to dump a yield curve
-    ImmutableSet<MarketDataId<?>> curveIdList = reqs.getNonObservables();
-    CurveId firstCurveId = (CurveId)curveIdList.toArray()[0];
-    CurveName firstCurveName = firstCurveId.getCurveName();
-    dump(enhancedMarketData.getValue(firstCurveId).toString(), "/home/asehdeva/curve.yaml");
-    beanDump((ImmutableMarketData)enhancedMarketData.scenario(0), "/home/asehdeva/enhanced.xml");
     
     Results results = runner.calculateSingleScenario(rules, trades, columns, enhancedMarketData, refData);
     return Pair.of(trades, results);
