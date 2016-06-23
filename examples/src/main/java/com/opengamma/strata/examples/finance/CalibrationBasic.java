@@ -2,10 +2,13 @@ package com.opengamma.strata.examples.finance;
 
 import static java.util.stream.Collectors.toMap;
 
+import java.io.FileNotFoundException;
+import java.io.PrintWriter;
 import java.time.LocalDate;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Stream;
 
 import com.google.common.collect.ImmutableMap;
 import com.opengamma.strata.basics.ReferenceData;
@@ -69,7 +72,7 @@ public class CalibrationBasic {
   private static final ResourceLocator QUOTES_RESOURCE =
       ResourceLocator.of(ResourceLocator.FILE_URL_PREFIX + PATH_CONFIG + "quotes/quotes.csv");
 
-  public static void calibrate_og(
+  public static DiscountFactors calibrate_og(
       LocalDate marketDataDate, 
       ResourceLocator quotesResource,
       ResourceLocator groupsResource, 
@@ -110,13 +113,14 @@ public class CalibrationBasic {
     System.out.println(discountFactors.zeroRate(0.5));
     System.out.println(discountFactors.zeroRate(1));
     
+    return discountFactors;
     
   }
   
   /**
    * Calibrate using string and integer inputs
    */  
-  public static void calibrate_str(
+  public static DiscountFactors calibrate_str(
       Integer marketDataDateYYYY,
       Integer marketDataDateMM,
       Integer marketDataDateDD,
@@ -132,7 +136,7 @@ public class CalibrationBasic {
     /**
      * Calibrate using opengamma object inputs
      */  
-    calibrate_og(
+    return calibrate_og(
         LocalDate.of(marketDataDateYYYY, marketDataDateMM, marketDataDateDD), 
         ResourceLocator.of(ResourceLocator.FILE_URL_PREFIX + pathConfig + quotesResource),
         ResourceLocator.of(ResourceLocator.FILE_URL_PREFIX + pathConfig + groupsResource),        
@@ -142,10 +146,18 @@ public class CalibrationBasic {
         IborIndex.of(iborIndex),
         Currency.of(iborCurrency));
   }
+  
 
-  public static void main(String[] args) {
+  public static void main(String[] args) throws FileNotFoundException {
+    
+    // two years of back dates collection - load from a file
+    
+    // for each date in collection
+    // non-date specific resource
+    // date specific resource
+    // curve specific resource
 
-    calibrate_str(
+    DiscountFactors discountFactors = calibrate_str(
         2015,
         7,
         21,
@@ -157,6 +169,27 @@ public class CalibrationBasic {
         "AED-DSCON-EIBOR3M",
         "AED-EIBOR-3M",
         "AED");
+    
+    Map<String, Double> publishedTenors = new HashMap<>();
+    publishedTenors.put("1M", 1.0/12.0);
+    publishedTenors.put("3M", 0.25);
+    publishedTenors.put("6M", 0.5);
+    publishedTenors.put("9M", 0.75);
+    publishedTenors.put("1Y", 1.0);
+    publishedTenors.put("2Y", 2.0);
+    publishedTenors.put("3Y", 3.0);
+    publishedTenors.put("4Y", 4.0);
+    publishedTenors.put("5Y", 5.0);
+    publishedTenors.put("7Y", 7.0);
+    publishedTenors.put("10Y", 10.0);
+    
+    try (Stream<String> input = publishedTenors.keySet().stream();
+        PrintWriter output = new PrintWriter("/home/asehdeva/bootstrapped.txt"))
+    {
+      input.map(s -> s + "," + String.valueOf(discountFactors.zeroRate(publishedTenors.get(s))))
+      .forEachOrdered(output::println);
+      }
+
     /*
     calibrate_og(
         VAL_DATE, 
