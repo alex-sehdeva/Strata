@@ -5,20 +5,24 @@ import static java.util.stream.Collectors.toMap;
 import java.io.FileNotFoundException;
 import java.io.PrintWriter;
 import java.time.LocalDate;
+import java.time.Period;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Stream;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.opengamma.strata.basics.ReferenceData;
 import com.opengamma.strata.basics.currency.Currency;
+import com.opengamma.strata.basics.date.Tenor;
 import com.opengamma.strata.basics.index.IborIndex;
 import com.opengamma.strata.basics.index.Index;
 import com.opengamma.strata.collect.io.ResourceLocator;
 import com.opengamma.strata.collect.timeseries.LocalDateDoubleTimeSeries;
 import com.opengamma.strata.data.ImmutableMarketData;
 import com.opengamma.strata.data.MarketData;
+import com.opengamma.strata.loader.csv.DatesCsvLoader;
 import com.opengamma.strata.loader.csv.QuotesCsvLoader;
 import com.opengamma.strata.loader.csv.RatesCalibrationCsvLoader;
 import com.opengamma.strata.market.curve.CurveGroupDefinition;
@@ -71,7 +75,12 @@ public class CalibrationBasic {
    */
   private static final ResourceLocator QUOTES_RESOURCE =
       ResourceLocator.of(ResourceLocator.FILE_URL_PREFIX + PATH_CONFIG + "quotes/quotes.csv");
-
+  /**
+   * The location of the backfill dates file.
+   */
+  private static final ResourceLocator DATES_RESOURCE =
+      ResourceLocator.of(ResourceLocator.FILE_URL_PREFIX + PATH_CONFIG + "quotes/backfill_dates.csv");
+  
   public static DiscountFactors calibrate_og(
       LocalDate marketDataDate, 
       ResourceLocator quotesResource,
@@ -147,16 +156,99 @@ public class CalibrationBasic {
         Currency.of(iborCurrency));
   }
   
+  public static void backfill() throws FileNotFoundException {
+
+    Map<String, Period> publishedPeriods = new HashMap<>();
+    publishedPeriods.put("1M", Period.ofMonths(1));
+    publishedPeriods.put("3M", Period.ofMonths(3));
+    publishedPeriods.put("6M", Period.ofMonths(6));
+    publishedPeriods.put("9M", Period.ofMonths(9));
+    publishedPeriods.put("1Y", Period.ofYears(1));
+    publishedPeriods.put("2Y", Period.ofYears(2));
+    publishedPeriods.put("3Y", Period.ofYears(3));
+    publishedPeriods.put("4Y", Period.ofYears(4));
+    publishedPeriods.put("5Y", Period.ofYears(5));
+    publishedPeriods.put("7Y", Period.ofYears(7));
+    publishedPeriods.put("10Y", Period.ofYears(10));
+    
+    Map<String, Double> publishedTenors = new HashMap<>();
+    publishedTenors.put("1M", 1.0/12.0);
+    publishedTenors.put("3M", 0.25);
+    publishedTenors.put("6M", 0.5);
+    publishedTenors.put("9M", 0.75);
+    publishedTenors.put("1Y", 1.0);
+    publishedTenors.put("2Y", 2.0);
+    publishedTenors.put("3Y", 3.0);
+    publishedTenors.put("4Y", 4.0);
+    publishedTenors.put("5Y", 5.0);
+    publishedTenors.put("7Y", 7.0);
+    publishedTenors.put("10Y", 10.0);
+    
+    Map<String, String> publishedTickers = new HashMap<>();
+    publishedTickers.put("1M", "AED-Fixing-1M");
+    publishedTickers.put("3M", "AED-Fixing-3M");
+    publishedTickers.put("6M", "AED-FRA-3Mx6M");
+    publishedTickers.put("9M", "AED-FRA-6Mx9M");
+    publishedTickers.put("1Y", "AED-IRS3M-1Y");
+    publishedTickers.put("2Y", "AED-IRS3M-2Y");
+    publishedTickers.put("3Y", "AED-IRS3M-3Y");
+    publishedTickers.put("4Y", "AED-IRS3M-4Y");
+    publishedTickers.put("5Y", "AED-IRS3M-5Y");
+    publishedTickers.put("7Y", "AED-IRS3M-7Y");
+    publishedTickers.put("10Y", "AED-IRS3M-10Y");    
+    
+    ImmutableList<LocalDate> dates = DatesCsvLoader.load(DATES_RESOURCE);
+    
+    // non-date specific resources
+    ReferenceData refData = ReferenceData.standard();
+    
+    // load the curve definition
+    List<CurveGroupDefinition> defns =
+        RatesCalibrationCsvLoader.load(GROUPS_RESOURCE, SETTINGS_RESOURCE, CALIBRATION_RESOURCE);
+
+    Map<CurveGroupName, CurveGroupDefinition> defnMap = defns.stream().collect(toMap(def -> def.getName(), def -> def));
+    CurveGroupDefinition curveGroupDefinition = defnMap.get(CURVE_GROUP_NAME);
+    
+    CurveCalibrator curveCalibrator = CurveCalibrator.standard();
+        
+    try (PrintWriter output = new PrintWriter("/home/asehdeva/bootstrapped.txt"))
+    {
+      for (LocalDate date: dates)
+      {
+        System.out.println(date.toString());
+        // date specific resources
+        // dummy out historical fixings, these are not needed in this context
+        LocalDateDoubleTimeSeries localDateDoubleTimeSeries = LocalDateDoubleTimeSeries.of(date, 0);
+        Map<Index, LocalDateDoubleTimeSeries> timeSeries = new HashMap<>();
+        timeSeries.put(IBOR_INDEX, localDateDoubleTimeSeries);
+        
+        // load quotes
+        ImmutableMap<QuoteId, Double> quotes = QuotesCsvLoader.load(date, QUOTES_RESOURCE);
+    
+        // create the market data used for building trades
+        MarketData marketData = ImmutableMarketData.of(date, quotes);
+    
+        ImmutableRatesProvider immutableRatesProvider = curveCalibrator.calibrate(curveGroupDefinition, date, marketData, refData, timeSeries);
+    
+        DiscountFactors discountFactors = immutableRatesProvider.discountFactors(CURRENCY);  
+        
+        try (Stream<String> input = publishedTenors.keySet().stream();)
+        {
+          input.map(s -> date.toString() + 
+              ",AED-3ME," + 
+              Tenor.of(publishedPeriods.get(s)).addTo(date).toString() + 
+              "," + String.valueOf(discountFactors.zeroRate(publishedTenors.get(s)) + "," + s))
+          .forEachOrdered(output::println);
+          }
+        }
+      }
+    }
+  
 
   public static void main(String[] args) throws FileNotFoundException {
     
-    // two years of back dates collection - load from a file
-    
-    // for each date in collection
-    // non-date specific resource
-    // date specific resource
-    // curve specific resource
-
+    backfill();
+    /*
     DiscountFactors discountFactors = calibrate_str(
         2015,
         7,
@@ -189,7 +281,8 @@ public class CalibrationBasic {
       input.map(s -> s + "," + String.valueOf(discountFactors.zeroRate(publishedTenors.get(s))))
       .forEachOrdered(output::println);
       }
-
+     */
+    
     /*
     calibrate_og(
         VAL_DATE, 
