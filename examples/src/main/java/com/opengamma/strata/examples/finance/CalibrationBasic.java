@@ -158,44 +158,18 @@ public class CalibrationBasic {
   
   public static void backfill() throws FileNotFoundException {
 
-    Map<String, Period> publishedPeriods = new HashMap<>();
-    publishedPeriods.put("1M", Period.ofMonths(1));
-    publishedPeriods.put("3M", Period.ofMonths(3));
-    publishedPeriods.put("6M", Period.ofMonths(6));
-    publishedPeriods.put("9M", Period.ofMonths(9));
-    publishedPeriods.put("1Y", Period.ofYears(1));
-    publishedPeriods.put("2Y", Period.ofYears(2));
-    publishedPeriods.put("3Y", Period.ofYears(3));
-    publishedPeriods.put("4Y", Period.ofYears(4));
-    publishedPeriods.put("5Y", Period.ofYears(5));
-    publishedPeriods.put("7Y", Period.ofYears(7));
-    publishedPeriods.put("10Y", Period.ofYears(10));
-    
-    Map<String, Double> publishedTenors = new HashMap<>();
-    publishedTenors.put("1M", 1.0/12.0);
-    publishedTenors.put("3M", 0.25);
-    publishedTenors.put("6M", 0.5);
-    publishedTenors.put("9M", 0.75);
-    publishedTenors.put("1Y", 1.0);
-    publishedTenors.put("2Y", 2.0);
-    publishedTenors.put("3Y", 3.0);
-    publishedTenors.put("4Y", 4.0);
-    publishedTenors.put("5Y", 5.0);
-    publishedTenors.put("7Y", 7.0);
-    publishedTenors.put("10Y", 10.0);
-    
-    Map<String, String> publishedTickers = new HashMap<>();
-    publishedTickers.put("1M", "AED-Fixing-1M");
-    publishedTickers.put("3M", "AED-Fixing-3M");
-    publishedTickers.put("6M", "AED-FRA-3Mx6M");
-    publishedTickers.put("9M", "AED-FRA-6Mx9M");
-    publishedTickers.put("1Y", "AED-IRS3M-1Y");
-    publishedTickers.put("2Y", "AED-IRS3M-2Y");
-    publishedTickers.put("3Y", "AED-IRS3M-3Y");
-    publishedTickers.put("4Y", "AED-IRS3M-4Y");
-    publishedTickers.put("5Y", "AED-IRS3M-5Y");
-    publishedTickers.put("7Y", "AED-IRS3M-7Y");
-    publishedTickers.put("10Y", "AED-IRS3M-10Y");    
+    Map<String, Tenor> publishedTenors = new HashMap<>();
+    publishedTenors.put("1M", Tenor.of(Period.ofMonths(1)));
+    publishedTenors.put("3M", Tenor.of(Period.ofMonths(3)));
+    publishedTenors.put("6M", Tenor.of(Period.ofMonths(6)));
+    publishedTenors.put("9M", Tenor.of(Period.ofMonths(9)));
+    publishedTenors.put("1Y", Tenor.of(Period.ofYears(1)));
+    publishedTenors.put("2Y", Tenor.of(Period.ofYears(2)));
+    publishedTenors.put("3Y", Tenor.of(Period.ofYears(3)));
+    publishedTenors.put("4Y", Tenor.of(Period.ofYears(4)));
+    publishedTenors.put("5Y", Tenor.of(Period.ofYears(5)));
+    publishedTenors.put("7Y", Tenor.of(Period.ofYears(7)));
+    publishedTenors.put("10Y", Tenor.of(Period.ofYears(10)));       
     
     ImmutableList<LocalDate> dates = DatesCsvLoader.load(DATES_RESOURCE);
     
@@ -236,8 +210,11 @@ public class CalibrationBasic {
         {
           input.map(s -> date.toString() + 
               ",AED-3ME," + 
-              Tenor.of(publishedPeriods.get(s)).addTo(date).toString() + 
-              "," + String.valueOf(discountFactors.zeroRate(publishedTenors.get(s)) + "," + s))
+              publishedTenors.get(s).addTo(date).toString() + 
+              "," + 
+//              String.valueOf(discountFactors.zeroRate(publishedFractions.get(s)) 
+              String.valueOf(discountFactors.zeroRate((LocalDate)publishedTenors.get(s).addTo(date))
+                  + "," + s))
           .forEachOrdered(output::println);
           }
         }
