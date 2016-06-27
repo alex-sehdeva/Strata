@@ -113,7 +113,7 @@ public class CalibrationBasic {
     Map<Index, LocalDateDoubleTimeSeries> timeSeries = new HashMap<>();
     timeSeries.put(iborIndex, localDateDoubleTimeSeries);
     
-    ImmutableRatesProvider immutableRatesProvider = curveCalibrator.calibrate(curveGroupDefinition, marketDataDate, marketData, refData, timeSeries);
+    ImmutableRatesProvider immutableRatesProvider = curveCalibrator.calibrate(curveGroupDefinition, marketData, refData, timeSeries);
     
     DiscountFactors discountFactors = immutableRatesProvider.discountFactors(iborCurrency);
     
@@ -202,7 +202,7 @@ public class CalibrationBasic {
         // create the market data used for building trades
         MarketData marketData = ImmutableMarketData.of(date, quotes);
     
-        ImmutableRatesProvider immutableRatesProvider = curveCalibrator.calibrate(curveGroupDefinition, date, marketData, refData, timeSeries);
+        ImmutableRatesProvider immutableRatesProvider = curveCalibrator.calibrate(curveGroupDefinition, marketData, refData, timeSeries);
     
         DiscountFactors discountFactors = immutableRatesProvider.discountFactors(CURRENCY);  
         
