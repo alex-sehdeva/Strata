@@ -98,7 +98,7 @@ public class SabrSwaptionRawDataSensitivityCalculatorTest {
   private static final CalibrationMeasures CALIBRATION_MEASURES = CalibrationMeasures.PAR_SPREAD;
   private static final CurveCalibrator CALIBRATOR = CurveCalibrator.of(1e-9, 1e-9, 100, CALIBRATION_MEASURES);
   private static final RatesProvider MULTICURVE =
-      CALIBRATOR.calibrate(CONFIGS, CALIBRATION_DATE, MARKET_QUOTES, REF_DATA, TS);
+      CALIBRATOR.calibrate(CONFIGS, MARKET_QUOTES, REF_DATA, TS);
 
   private static final List<RawOptionData> DATA_RAW_FULL = SabrSwaptionCalibratorSmileTestUtils
       .rawData(ValueType.SIMPLE_MONEYNESS, MONEYNESS, EXPIRIES, ValueType.NORMAL_VOLATILITY, DATA_ARRAY_FULL);
@@ -180,14 +180,14 @@ public class SabrSwaptionRawDataSensitivityCalculatorTest {
       List<RawOptionData> dataRaw) {
     PointSensitivities points =
         LEG_PRICER.presentValueSensitivitySabrParameter(FLOOR_LEG, MULTICURVE, sabrCalibrated).build();
-    CurrencyParameterSensitivities sabrParametersSurfaceSensitivities = sabrCalibrated.parameterSensitivity(points);    
+    CurrencyParameterSensitivities sabrParametersSurfaceSensitivities = sabrCalibrated.parameterSensitivity(points);
     CurrencyParameterSensitivity parallelSensitivitiesSurface =
-        RDSC.parallelSensitivity(sabrParametersSurfaceSensitivities, sabrCalibrated);        
+        RDSC.parallelSensitivity(sabrParametersSurfaceSensitivities, sabrCalibrated);
     DoubleArray sensitivityArray = parallelSensitivitiesSurface.getSensitivity();
-    double fdShift = 1.0E-6;    
+    double fdShift = 1.0E-6;
     int surfacePointIndex = 0;
-    for (int looptenor = 0; looptenor < TENORS.size(); looptenor++) {
-      for (int loopexpiry = 0; loopexpiry < EXPIRIES.size(); loopexpiry++) {
+    for (int loopexpiry = 0; loopexpiry < EXPIRIES.size(); loopexpiry++) {
+      for (int looptenor = 0; looptenor < TENORS.size(); looptenor++) {
         Pair<DoubleArray, DoubleArray> ds = dataRaw.get(looptenor).availableSmileAtExpiry(EXPIRIES.get(loopexpiry));
         if (!ds.getFirst().isEmpty()) {
           double[] pv = new double[2]; // pv with shift up and down
