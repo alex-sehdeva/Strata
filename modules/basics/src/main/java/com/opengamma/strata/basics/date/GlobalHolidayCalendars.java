@@ -5,6 +5,7 @@
  */
 package com.opengamma.strata.basics.date;
 
+import static java.time.DayOfWeek.FRIDAY;
 import static java.time.DayOfWeek.MONDAY;
 import static java.time.DayOfWeek.SATURDAY;
 import static java.time.DayOfWeek.SUNDAY;
@@ -130,6 +131,15 @@ final class GlobalHolidayCalendars {
    * Future and past dates are an extrapolations of the latest known rules.
    */
   public static final HolidayCalendar CATO = generateToronto();
+  /**
+   * The holiday calendar for Fri Sat off, with code 'FRI_SAT'.
+   * <p>
+   * This constant provides the calendar for UAE holidays.
+   * <p>
+   * The default implementation is based on original research and covers 1950 to 2099.
+   * Future and past dates are an extrapolations of the latest known rules.
+   */
+  public static final HolidayCalendar FRI_SAT = generateFriSat();
 
   //-------------------------------------------------------------------------
   /**
@@ -634,6 +644,14 @@ final class GlobalHolidayCalendars {
     removeSatSun(holidays);
     return ImmutableHolidayCalendar.of(HolidayCalendarId.of("CATO"), holidays, SATURDAY, SUNDAY);
   }
+  
+  //-------------------------------------------------------------------------
+  // generate FRI_SAT
+  static ImmutableHolidayCalendar generateFriSat() {
+    List<LocalDate> holidays = new ArrayList<>(2000);
+    removeFriSat(holidays); // redundant with "of" call?
+    return ImmutableHolidayCalendar.of(HolidayCalendarIds.FRI_SAT, holidays, FRIDAY, SATURDAY);
+  }  
 
   //-------------------------------------------------------------------------
   // date
@@ -697,6 +715,11 @@ final class GlobalHolidayCalendars {
     holidays.removeIf(date -> date.getDayOfWeek() == SATURDAY || date.getDayOfWeek() == SUNDAY);
   }
 
+  // remove any holidays covered by Sat/Sun
+  private static void removeFriSat(List<LocalDate> holidays) {
+    holidays.removeIf(date -> date.getDayOfWeek() == FRIDAY || date.getDayOfWeek() == SATURDAY);
+  }
+  
   // apply bridging (Mon/Fri are holidays if Tue/Thu are)
   private static void applyBridging(List<LocalDate> holidays) {
     Set<LocalDate> additional1 = holidays.stream()

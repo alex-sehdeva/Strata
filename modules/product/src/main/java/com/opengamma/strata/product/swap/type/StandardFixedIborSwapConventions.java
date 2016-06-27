@@ -20,6 +20,7 @@ import static com.opengamma.strata.basics.date.HolidayCalendarIds.EUTA;
 import static com.opengamma.strata.basics.date.HolidayCalendarIds.GBLO;
 import static com.opengamma.strata.basics.date.HolidayCalendarIds.JPTO;
 import static com.opengamma.strata.basics.date.HolidayCalendarIds.USNY;
+import static com.opengamma.strata.basics.date.HolidayCalendarIds.FRI_SAT;
 import static com.opengamma.strata.basics.schedule.Frequency.P12M;
 import static com.opengamma.strata.basics.schedule.Frequency.P6M;
 import static com.opengamma.strata.basics.schedule.Frequency.P3M;
@@ -49,7 +50,7 @@ final class StandardFixedIborSwapConventions {
   public static final FixedIborSwapConvention AED_FIXED_1Y_EIBOR_3M =
       ImmutableFixedIborSwapConvention.of(
           "AED-FIXED-1Y-EIBOR-3M",
-          FixedRateSwapLegConvention.of(AED, ACT_360, P12M, BusinessDayAdjustment.of(MODIFIED_FOLLOWING, GBLO_USNY)),
+          FixedRateSwapLegConvention.of(AED, ACT_360, P12M, BusinessDayAdjustment.of(MODIFIED_FOLLOWING, FRI_SAT)),
           IborRateSwapLegConvention.of(IborIndices.AED_EIBOR_3M));
   
   /**
