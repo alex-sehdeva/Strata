@@ -52,11 +52,11 @@ import com.opengamma.strata.market.curve.CurveName;
 import com.opengamma.strata.market.curve.CurveNode;
 import com.opengamma.strata.market.curve.DefaultCurveMetadata;
 import com.opengamma.strata.market.curve.InterpolatedNodalCurveDefinition;
+import com.opengamma.strata.market.curve.interpolator.CurveExtrapolators;
+import com.opengamma.strata.market.curve.interpolator.CurveInterpolators;
 import com.opengamma.strata.market.curve.node.FixedIborSwapCurveNode;
 import com.opengamma.strata.market.curve.node.FraCurveNode;
 import com.opengamma.strata.market.curve.node.FxSwapCurveNode;
-import com.opengamma.strata.market.interpolator.CurveExtrapolators;
-import com.opengamma.strata.market.interpolator.CurveInterpolators;
 import com.opengamma.strata.market.observable.QuoteId;
 import com.opengamma.strata.market.param.ParameterMetadata;
 import com.opengamma.strata.measure.rate.RatesMarketDataLookup;
@@ -188,7 +188,8 @@ public class CurveGroupMarketDataFunctionTest {
    */
   public void requirements() {
     FraCurveNode node1x4 = CurveTestUtils.fraNode(1, "foo");
-    List<CurveNode> nodes = ImmutableList.of(node1x4);
+    FraCurveNode node2x5 = CurveTestUtils.fraNode(2, "foo");
+    List<CurveNode> nodes = ImmutableList.of(node1x4, node2x5);
     CurveGroupName groupName = CurveGroupName.of("Curve Group");
     CurveName curveName = CurveName.of("FRA Curve");
     ObservableSource obsSource = ObservableSource.of("Vendor");

@@ -22,9 +22,9 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.opengamma.strata.basics.ReferenceData;
+import com.opengamma.strata.basics.currency.AdjustablePayment;
 import com.opengamma.strata.basics.currency.Currency;
 import com.opengamma.strata.basics.currency.CurrencyAmount;
-import com.opengamma.strata.basics.currency.Payment;
 import com.opengamma.strata.basics.date.AdjustableDate;
 import com.opengamma.strata.basics.date.BusinessDayAdjustment;
 import com.opengamma.strata.basics.date.BusinessDayConventions;
@@ -35,7 +35,7 @@ import com.opengamma.strata.calc.Measure;
 import com.opengamma.strata.calc.runner.CalculationParameters;
 import com.opengamma.strata.calc.runner.FunctionRequirements;
 import com.opengamma.strata.collect.result.Result;
-import com.opengamma.strata.data.scenario.CurrencyValuesArray;
+import com.opengamma.strata.data.scenario.CurrencyScenarioArray;
 import com.opengamma.strata.data.scenario.ScenarioMarketData;
 import com.opengamma.strata.market.curve.ConstantCurve;
 import com.opengamma.strata.market.curve.Curve;
@@ -53,7 +53,7 @@ import com.opengamma.strata.pricer.swaption.SwaptionVolatilitiesId;
 import com.opengamma.strata.product.common.BuySell;
 import com.opengamma.strata.product.swap.Swap;
 import com.opengamma.strata.product.swap.type.FixedIborSwapConventions;
-import com.opengamma.strata.product.swaption.PhysicalSettlement;
+import com.opengamma.strata.product.swaption.PhysicalSwaptionSettlement;
 import com.opengamma.strata.product.swaption.ResolvedSwaptionTrade;
 import com.opengamma.strata.product.swaption.Swaption;
 import com.opengamma.strata.product.swaption.SwaptionSettlement;
@@ -76,7 +76,7 @@ public class SwaptionTradeCalculationFunctionTest {
   private static final AdjustableDate ADJUSTABLE_EXPIRY_DATE = AdjustableDate.of(EXPIRY_DATE, ADJUSTMENT);
   private static final LocalTime EXPIRY_TIME = LocalTime.of(11, 0);
   private static final ZoneId ZONE = ZoneId.of("Z");
-  private static final SwaptionSettlement PHYSICAL_SETTLE = PhysicalSettlement.DEFAULT;
+  private static final SwaptionSettlement PHYSICAL_SETTLE = PhysicalSwaptionSettlement.DEFAULT;
   private static final Swaption SWAPTION = Swaption.builder()
       .expiryDate(ADJUSTABLE_EXPIRY_DATE)
       .expiryTime(EXPIRY_TIME)
@@ -85,7 +85,8 @@ public class SwaptionTradeCalculationFunctionTest {
       .swaptionSettlement(PHYSICAL_SETTLE)
       .underlying(SWAP)
       .build();
-  private static final Payment PREMIUM = Payment.of(CurrencyAmount.of(Currency.USD, -3150000d), LocalDate.of(2014, 3, 17));
+  private static final AdjustablePayment PREMIUM =
+      AdjustablePayment.of(CurrencyAmount.of(Currency.USD, -3150000d), LocalDate.of(2014, 3, 17));
   public static final SwaptionTrade TRADE = SwaptionTrade.builder().premium(PREMIUM).product(SWAPTION).build();
   public static final ResolvedSwaptionTrade RTRADE = TRADE.resolve(REF_DATA);
   private static final Currency CURRENCY = Currency.USD;
@@ -123,12 +124,10 @@ public class SwaptionTradeCalculationFunctionTest {
     ResolvedSwaptionTrade resolved = TRADE.resolve(REF_DATA);
     CurrencyAmount expectedPv = pricer.presentValue(resolved, provider, NORMAL_VOL_SWAPTION_PROVIDER_USD);
 
-    Set<Measure> measures = ImmutableSet.of(Measures.PRESENT_VALUE, Measures.PRESENT_VALUE_MULTI_CCY);
+    Set<Measure> measures = ImmutableSet.of(Measures.PRESENT_VALUE);
     assertThat(function.calculate(TRADE, measures, PARAMS, md, REF_DATA))
         .containsEntry(
-            Measures.PRESENT_VALUE, Result.success(CurrencyValuesArray.of(ImmutableList.of(expectedPv))))
-        .containsEntry(
-            Measures.PRESENT_VALUE_MULTI_CCY, Result.success(CurrencyValuesArray.of(ImmutableList.of(expectedPv))));
+            Measures.PRESENT_VALUE, Result.success(CurrencyScenarioArray.of(ImmutableList.of(expectedPv))));
   }
 
   //-------------------------------------------------------------------------

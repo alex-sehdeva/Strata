@@ -6,19 +6,17 @@
 package com.opengamma.strata.pricer.rate;
 
 import java.time.LocalDate;
-import java.util.Optional;
 
 import com.opengamma.strata.basics.currency.Currency;
 import com.opengamma.strata.basics.index.PriceIndex;
 import com.opengamma.strata.basics.index.PriceIndexObservation;
+import com.opengamma.strata.collect.Messages;
 import com.opengamma.strata.collect.array.DoubleArray;
 import com.opengamma.strata.collect.timeseries.LocalDateDoubleTimeSeries;
-import com.opengamma.strata.data.MarketDataName;
 import com.opengamma.strata.market.MarketDataView;
 import com.opengamma.strata.market.ValueType;
 import com.opengamma.strata.market.curve.Curve;
-import com.opengamma.strata.market.curve.CurveName;
-import com.opengamma.strata.market.curve.InterpolatedNodalCurve;
+import com.opengamma.strata.market.curve.NodalCurve;
 import com.opengamma.strata.market.param.CurrencyParameterSensitivities;
 import com.opengamma.strata.market.param.CurrencyParameterSensitivity;
 import com.opengamma.strata.market.param.ParameterPerturbation;
@@ -51,10 +49,15 @@ public interface PriceIndexValues
   public static PriceIndexValues of(
       PriceIndex index,
       LocalDate valuationDate,
-      InterpolatedNodalCurve forwardCurve,
+      Curve forwardCurve,
       LocalDateDoubleTimeSeries fixings) {
 
-    return SimplePriceIndexValues.of(index, valuationDate, forwardCurve, fixings);
+    if (forwardCurve instanceof NodalCurve) {
+      return SimplePriceIndexValues.of(index, valuationDate, (NodalCurve) forwardCurve, fixings);
+    }
+    throw new IllegalArgumentException(Messages.format(
+        "Unknown curve type for PriceIndexValues, must be 'NodalCurve' but was '{}'",
+        forwardCurve.getClass().getName()));
   }
 
   //-------------------------------------------------------------------------
@@ -76,18 +79,6 @@ public interface PriceIndexValues
    * @return the time-series fixings
    */
   public abstract LocalDateDoubleTimeSeries getFixings();
-
-  /**
-   * Finds the market data structure underlying this instance with the specified name.
-   * <p>
-   * This is most commonly used to find a {@link Curve} using a {@link CurveName}.
-   * If the market data cannot be found, empty is returned.
-   * 
-   * @param <T>  the type of the market data value
-   * @param name  the name to find
-   * @return the market data value, empty if not found
-   */
-  public abstract <T> Optional<T> findData(MarketDataName<T> name);
 
   //-------------------------------------------------------------------------
   @Override

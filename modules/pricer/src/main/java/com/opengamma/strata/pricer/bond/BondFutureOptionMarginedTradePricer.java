@@ -12,7 +12,7 @@ import com.opengamma.strata.basics.currency.MultiCurrencyAmount;
 import com.opengamma.strata.market.sensitivity.PointSensitivities;
 import com.opengamma.strata.product.bond.ResolvedBondFutureOption;
 import com.opengamma.strata.product.bond.ResolvedBondFutureOptionTrade;
-import com.opengamma.strata.product.common.FutureOptionPremiumStyle;
+import com.opengamma.strata.product.option.FutureOptionPremiumStyle;
 
 /**
  * Pricer for bond future option trades with daily margin.
@@ -119,7 +119,7 @@ public abstract class BondFutureOptionMarginedTradePricer {
    * @param futureProvider  the provider of future/option pricing data
    * @return the present value curve sensitivity of the trade
    */
-  public PointSensitivities presentValueSensitivity(
+  public PointSensitivities presentValueSensitivityRates(
       ResolvedBondFutureOptionTrade trade,
       LegalEntityDiscountingProvider ratesProvider,
       BondFutureProvider futureProvider) {

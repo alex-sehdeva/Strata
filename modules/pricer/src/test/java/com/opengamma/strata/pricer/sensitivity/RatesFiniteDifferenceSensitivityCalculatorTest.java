@@ -16,12 +16,12 @@ import com.google.common.collect.ImmutableMap;
 import com.opengamma.strata.basics.currency.Currency;
 import com.opengamma.strata.basics.currency.CurrencyAmount;
 import com.opengamma.strata.basics.index.Index;
-import com.opengamma.strata.basics.index.PriceIndex;
 import com.opengamma.strata.collect.ArgChecker;
 import com.opengamma.strata.collect.array.DoubleArray;
 import com.opengamma.strata.collect.tuple.Pair;
 import com.opengamma.strata.market.curve.Curve;
 import com.opengamma.strata.market.curve.InterpolatedNodalCurve;
+import com.opengamma.strata.market.curve.NodalCurve;
 import com.opengamma.strata.market.param.CurrencyParameterSensitivities;
 import com.opengamma.strata.pricer.DiscountFactors;
 import com.opengamma.strata.pricer.SimpleDiscountFactors;
@@ -32,8 +32,6 @@ import com.opengamma.strata.pricer.bond.LegalEntityGroup;
 import com.opengamma.strata.pricer.datasets.LegalEntityDiscountingProviderDataSets;
 import com.opengamma.strata.pricer.datasets.RatesProviderDataSets;
 import com.opengamma.strata.pricer.rate.ImmutableRatesProvider;
-import com.opengamma.strata.pricer.rate.PriceIndexValues;
-import com.opengamma.strata.pricer.rate.SimplePriceIndexValues;
 
 /**
  * Tests {@link RatesFiniteDifferenceSensitivityCalculator}.
@@ -102,17 +100,11 @@ public class RatesFiniteDifferenceSensitivityCalculatorTest {
       InterpolatedNodalCurve curveInt = checkInterpolated(entry.getValue());
       result += sumProduct(curveInt);
     }
-    // Price index
-    ImmutableMap<PriceIndex, PriceIndexValues> mapPriceIndex = provider.getPriceIndexValues();
-    for (Entry<PriceIndex, PriceIndexValues> entry : mapPriceIndex.entrySet()) {
-      InterpolatedNodalCurve curveInt = ((SimplePriceIndexValues) entry.getValue()).getCurve();
-      result += sumProduct(curveInt);
-    }
     return CurrencyAmount.of(USD, result);
   }
 
   // compute the sum of the product of times and rates
-  private double sumProduct(InterpolatedNodalCurve curveInt) {
+  private double sumProduct(NodalCurve curveInt) {
     double result = 0.0;
     DoubleArray x = curveInt.getXValues();
     DoubleArray y = curveInt.getYValues();

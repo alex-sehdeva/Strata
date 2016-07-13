@@ -33,10 +33,28 @@ public class DiscountingPaymentPricer {
    * Computes the present value of the payment by discounting.
    * <p>
    * The present value is zero if the payment date is before the valuation date.
+   * 
+   * @param payment  the payment
+   * @param provider  the rates provider
+   * @return the present value
+   */
+  public CurrencyAmount presentValue(Payment payment, BaseProvider provider) {
+    // duplicated code to avoid looking up in the provider when not necessary
+    if (provider.getValuationDate().isAfter(payment.getDate())) {
+      return CurrencyAmount.zero(payment.getCurrency());
+    }
+    double df = provider.discountFactor(payment.getCurrency(), payment.getDate());
+    return payment.getValue().multipliedBy(df);
+  }
+
+  /**
+   * Computes the present value of the payment by discounting.
+   * <p>
+   * The present value is zero if the payment date is before the valuation date.
    * <p>
    * The specified discount factors should be for the payment currency, however this is not validated.
    * 
-   * @param payment  the payment to price
+   * @param payment  the payment
    * @param discountFactors  the discount factors to price against
    * @return the present value
    */
@@ -48,6 +66,24 @@ public class DiscountingPaymentPricer {
   }
 
   /**
+   * Computes the present value of the payment by discounting.
+   * <p>
+   * The present value is zero if the payment date is before the valuation date.
+   * 
+   * @param payment  the payment
+   * @param provider  the rates provider
+   * @return the present value
+   */
+  public double presentValueAmount(Payment payment, BaseProvider provider) {
+    // duplicated code to avoid looking up in the provider when not necessary
+    if (provider.getValuationDate().isAfter(payment.getDate())) {
+      return 0d;
+    }
+    double df = provider.discountFactor(payment.getCurrency(), payment.getDate());
+    return payment.getAmount() * df;
+  }
+
+  /**
    * Computes the present value of the payment with z-spread by discounting.
    * <p>
    * The present value is zero if the payment date is before the valuation date.
@@ -55,16 +91,16 @@ public class DiscountingPaymentPricer {
    * The specified discount factors should be for the payment currency, however this is not validated.
    * <p>
    * The z-spread is a parallel shift applied to continuously compounded rates or periodic
-   * compounded rates of the discounting curve. 
+   * compounded rates of the discounting curve.
    * 
-   * @param payment  the payment to price
+   * @param payment  the payment
    * @param discountFactors  the discount factors to price against
    * @param zSpread  the z-spread
    * @param compoundedRateType  the compounded rate type
    * @param periodsPerYear  the number of periods per year
    * @return the present value
    */
-  public CurrencyAmount presentValue(
+  public CurrencyAmount presentValueWithSpread(
       Payment payment,
       DiscountFactors discountFactors,
       double zSpread,
@@ -78,25 +114,27 @@ public class DiscountingPaymentPricer {
     return payment.getValue().multipliedBy(df);
   }
 
+  //-------------------------------------------------------------------------
   /**
-   * Computes the present value of the payment by discounting.
+   * Compute the present value curve sensitivity of the payment.
    * <p>
-   * The present value is zero if the payment date is before the valuation date.
+   * The present value sensitivity of the payment is the sensitivity of the
+   * present value to the discount factor curve.
+   * There is no sensitivity if the payment date is before the valuation date.
    * 
-   * @param payment  the payment to price
+   * @param payment  the payment
    * @param provider  the rates provider
-   * @return the present value
+   * @return the point sensitivity of the present value
    */
-  public CurrencyAmount presentValue(Payment payment, BaseProvider provider) {
+  public PointSensitivityBuilder presentValueSensitivity(Payment payment, BaseProvider provider) {
     // duplicated code to avoid looking up in the provider when not necessary
     if (provider.getValuationDate().isAfter(payment.getDate())) {
-      return CurrencyAmount.zero(payment.getCurrency());
+      return PointSensitivityBuilder.none();
     }
     DiscountFactors discountFactors = provider.discountFactors(payment.getCurrency());
-    return payment.getValue().multipliedBy(discountFactors.discountFactor(payment.getDate()));
+    return discountFactors.zeroRatePointSensitivity(payment.getDate()).multipliedBy(payment.getAmount());
   }
 
-  //-------------------------------------------------------------------------
   /**
    * Compute the present value curve sensitivity of the payment.
    * <p>
@@ -106,7 +144,7 @@ public class DiscountingPaymentPricer {
    * <p>
    * The specified discount factors should be for the payment currency, however this is not validated.
    * 
-   * @param payment  the payment to price
+   * @param payment  the payment
    * @param discountFactors  the discount factors to price against
    * @return the point sensitivity of the present value
    */
@@ -127,16 +165,16 @@ public class DiscountingPaymentPricer {
    * The specified discount factors should be for the payment currency, however this is not validated.
    * <p>
    * The z-spread is a parallel shift applied to continuously compounded rates or periodic
-   * compounded rates of the discounting curve. 
+   * compounded rates of the discounting curve.
    * 
-   * @param payment  the payment to price
+   * @param payment  the payment
    * @param discountFactors  the discount factors to price against
    * @param zSpread  the z-spread
    * @param compoundedRateType  the compounded rate type
    * @param periodsPerYear  the number of periods per year
    * @return the point sensitivity of the present value
    */
-  public PointSensitivityBuilder presentValueSensitivity(
+  public PointSensitivityBuilder presentValueSensitivityWithSpread(
       Payment payment,
       DiscountFactors discountFactors,
       double zSpread,
@@ -151,24 +189,37 @@ public class DiscountingPaymentPricer {
     return sensi.multipliedBy(payment.getAmount());
   }
 
+  //-------------------------------------------------------------------------
   /**
-   * Compute the present value curve sensitivity of the payment.
+   * Computes the forecast value of the payment.
    * <p>
-   * The present value sensitivity of the payment is the sensitivity of the
-   * present value to the discount factor curve.
-   * There is no sensitivity if the payment date is before the valuation date.
+   * The present value is zero if the payment date is before the valuation date.
    * 
-   * @param payment  the payment to price
+   * @param payment  the payment
    * @param provider  the rates provider
-   * @return the point sensitivity of the present value
+   * @return the forecast value
    */
-  public PointSensitivityBuilder presentValueSensitivity(Payment payment, BaseProvider provider) {
-    // duplicated code to avoid looking up in the provider when not necessary
+  public CurrencyAmount forecastValue(Payment payment, BaseProvider provider) {
     if (provider.getValuationDate().isAfter(payment.getDate())) {
-      return PointSensitivityBuilder.none();
+      return CurrencyAmount.zero(payment.getCurrency());
     }
-    DiscountFactors discountFactors = provider.discountFactors(payment.getCurrency());
-    return discountFactors.zeroRatePointSensitivity(payment.getDate()).multipliedBy(payment.getAmount());
+    return payment.getValue();
+  }
+
+  /**
+   * Computes the forecast value of the payment.
+   * <p>
+   * The present value is zero if the payment date is before the valuation date.
+   * 
+   * @param payment  the payment
+   * @param provider  the rates provider
+   * @return the forecast value
+   */
+  public double forecastValueAmount(Payment payment, BaseProvider provider) {
+    if (provider.getValuationDate().isAfter(payment.getDate())) {
+      return 0d;
+    }
+    return payment.getAmount();
   }
 
   //-------------------------------------------------------------------------

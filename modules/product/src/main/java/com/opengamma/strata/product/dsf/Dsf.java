@@ -28,13 +28,13 @@ import com.opengamma.strata.basics.ReferenceData;
 import com.opengamma.strata.basics.Resolvable;
 import com.opengamma.strata.basics.currency.Currency;
 import com.opengamma.strata.collect.ArgChecker;
+import com.opengamma.strata.product.SecuritizedProduct;
 import com.opengamma.strata.product.SecurityId;
 import com.opengamma.strata.product.swap.RateCalculationSwapLeg;
 import com.opengamma.strata.product.swap.ResolvedSwap;
 import com.opengamma.strata.product.swap.Swap;
 import com.opengamma.strata.product.swap.SwapLeg;
 import com.opengamma.strata.product.swap.SwapLegType;
-import com.opengamma.strata.product.SecuritizedProduct;
 
 /**
  * A deliverable swap futures contract.
@@ -44,6 +44,15 @@ import com.opengamma.strata.product.SecuritizedProduct;
  * The delivered swap is cleared by a central counterparty.
  * The last future price before delivery is quoted in term of the underlying swap present value.
  * The futures product is margined on a daily basis.
+ * 
+ * <h4>Price</h4>
+ * The price of a DSF is based on the present value (NPV) of the underlying swap on the delivery date.
+ * For example, a price of 100.182 represents a present value of $100,182.00, if the notional is $100,000.
+ * This price can also be viewed as a percentage present value - {@code (100 + percentPv)}, or 0.182% in this example.
+ * <p>
+ * Strata uses <i>decimal prices</i> for DSFs in the trade model, pricers and market data.
+ * The decimal price is based on the decimal multiplier equivalent to the implied percentage.
+ * Thus the market price of 100.182 is represented in Strata by 1.00182.
  */
 @BeanDefinition(constructorScope = "package")
 public final class Dsf

@@ -7,6 +7,7 @@ package com.opengamma.strata.pricer.bond;
 
 import static com.opengamma.strata.basics.currency.Currency.EUR;
 import static com.opengamma.strata.basics.date.DayCounts.ACT_365F;
+import static com.opengamma.strata.market.curve.interpolator.CurveInterpolators.LINEAR;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertSame;
 import static org.testng.Assert.assertTrue;
@@ -26,8 +27,6 @@ import com.opengamma.strata.basics.ReferenceData;
 import com.opengamma.strata.basics.currency.CurrencyAmount;
 import com.opengamma.strata.collect.array.DoubleArray;
 import com.opengamma.strata.market.ValueType;
-import com.opengamma.strata.market.interpolator.CurveExtrapolators;
-import com.opengamma.strata.market.interpolator.CurveInterpolators;
 import com.opengamma.strata.market.option.LogMoneynessStrike;
 import com.opengamma.strata.market.param.CurrencyParameterSensitivities;
 import com.opengamma.strata.market.param.CurrencyParameterSensitivity;
@@ -37,9 +36,8 @@ import com.opengamma.strata.market.surface.DefaultSurfaceMetadata;
 import com.opengamma.strata.market.surface.InterpolatedNodalSurface;
 import com.opengamma.strata.market.surface.SurfaceMetadata;
 import com.opengamma.strata.market.surface.SurfaceName;
-import com.opengamma.strata.math.impl.interpolation.CombinedInterpolatorExtrapolator;
-import com.opengamma.strata.math.impl.interpolation.GridInterpolator2D;
-import com.opengamma.strata.math.impl.interpolation.Interpolator1D;
+import com.opengamma.strata.market.surface.interpolator.GridSurfaceInterpolator;
+import com.opengamma.strata.market.surface.interpolator.SurfaceInterpolator;
 import com.opengamma.strata.pricer.common.GenericVolatilitySurfaceYearFractionParameterMetadata;
 import com.opengamma.strata.pricer.datasets.LegalEntityDiscountingProviderDataSets;
 import com.opengamma.strata.pricer.impl.option.BlackFormulaRepository;
@@ -63,11 +61,7 @@ public class BlackBondFutureOptionMarginedProductPricerTest {
   private static final LegalEntityDiscountingProvider RATE_PROVIDER =
       LegalEntityDiscountingProviderDataSets.ISSUER_REPO_ZERO_EUR;
   // vol surface
-  private static final Interpolator1D LINEAR_FLAT = CombinedInterpolatorExtrapolator.of(
-      CurveInterpolators.LINEAR.getName(),
-      CurveExtrapolators.FLAT.getName(),
-      CurveExtrapolators.FLAT.getName());
-  private static final GridInterpolator2D INTERPOLATOR_2D = new GridInterpolator2D(LINEAR_FLAT, LINEAR_FLAT);
+  private static final SurfaceInterpolator INTERPOLATOR_2D = GridSurfaceInterpolator.of(LINEAR, LINEAR);
   private static final DoubleArray TIME = DoubleArray.of(0.20, 0.20, 0.20, 0.20, 0.20, 0.45, 0.45, 0.45, 0.45, 0.45);
   private static final DoubleArray MONEYNESS =
       DoubleArray.of(-0.050, -0.005, 0.000, 0.005, 0.050, -0.050, -0.005, 0.000, 0.005, 0.050);
@@ -211,7 +205,7 @@ public class BlackBondFutureOptionMarginedProductPricerTest {
 
   //-------------------------------------------------------------------------
   public void test_priceSensitivity() {
-    PointSensitivities point = OPTION_PRICER.priceSensitivityStickyStrike(
+    PointSensitivities point = OPTION_PRICER.priceSensitivityRatesStickyStrike(
         FUTURE_OPTION_PRODUCT, RATE_PROVIDER, VOL_PROVIDER);
     CurrencyParameterSensitivities computed = RATE_PROVIDER.parameterSensitivity(point);
     CurrencyParameterSensitivities expected = FD_CAL.sensitivity(RATE_PROVIDER,
@@ -236,7 +230,7 @@ public class BlackBondFutureOptionMarginedProductPricerTest {
 
   public void test_priceSensitivity_from_future_price() {
     double futurePrice = 1.1d;
-    PointSensitivities point = OPTION_PRICER.priceSensitivityStickyStrike(
+    PointSensitivities point = OPTION_PRICER.priceSensitivityRatesStickyStrike(
         FUTURE_OPTION_PRODUCT, RATE_PROVIDER, VOL_PROVIDER, futurePrice);
     CurrencyParameterSensitivities computed = RATE_PROVIDER.parameterSensitivity(point);
     double delta = OPTION_PRICER.deltaStickyStrike(FUTURE_OPTION_PRODUCT, RATE_PROVIDER, VOL_PROVIDER, futurePrice);
@@ -248,7 +242,7 @@ public class BlackBondFutureOptionMarginedProductPricerTest {
   public void test_priceSensitivity_from_generic_provider() {
     BondFutureProvider volProvider = BlackVolatilityExpLogMoneynessBondFutureProvider.of(
         SURFACE, FUTURE_SECURITY_ID, ACT_365F, VAL_DATE_TIME);
-    PointSensitivities expected = OPTION_PRICER.priceSensitivityStickyStrike(
+    PointSensitivities expected = OPTION_PRICER.priceSensitivityRatesStickyStrike(
         FUTURE_OPTION_PRODUCT, RATE_PROVIDER, VOL_PROVIDER);
     PointSensitivities computed = OPTION_PRICER.priceSensitivity(FUTURE_OPTION_PRODUCT, RATE_PROVIDER, volProvider);
     assertEquals(computed, expected);
@@ -256,7 +250,7 @@ public class BlackBondFutureOptionMarginedProductPricerTest {
 
   //-------------------------------------------------------------------------
   public void test_priceSensitivityBlackVolatility() {
-    BondFutureOptionSensitivity sensi = OPTION_PRICER.priceSensitivityBlackVolatility(
+    BondFutureOptionSensitivity sensi = OPTION_PRICER.priceSensitivityModelParamsVolatility(
         FUTURE_OPTION_PRODUCT, RATE_PROVIDER, VOL_PROVIDER);
     testPriceSensitivityBlackVolatility(
         VOL_PROVIDER.parameterSensitivity(sensi),
@@ -265,7 +259,7 @@ public class BlackBondFutureOptionMarginedProductPricerTest {
 
   public void test_priceSensitivityBlackVolatility_from_future_price() {
     double futurePrice = 1.1d;
-    BondFutureOptionSensitivity sensi = OPTION_PRICER.priceSensitivityBlackVolatility(
+    BondFutureOptionSensitivity sensi = OPTION_PRICER.priceSensitivityModelParamsVolatility(
         FUTURE_OPTION_PRODUCT, RATE_PROVIDER, VOL_PROVIDER, futurePrice);
     testPriceSensitivityBlackVolatility(
         VOL_PROVIDER.parameterSensitivity(sensi),
@@ -312,7 +306,7 @@ public class BlackBondFutureOptionMarginedProductPricerTest {
   }
 
   public void test_marginIndexSensitivity() {
-    PointSensitivities point = OPTION_PRICER.priceSensitivityStickyStrike(
+    PointSensitivities point = OPTION_PRICER.priceSensitivityRatesStickyStrike(
         FUTURE_OPTION_PRODUCT, RATE_PROVIDER, VOL_PROVIDER);
     PointSensitivities computed = OPTION_PRICER.marginIndexSensitivity(FUTURE_OPTION_PRODUCT, point);
     assertEquals(computed, point.multipliedBy(FUTURE_OPTION_PRODUCT.getUnderlyingFuture().getNotional()));

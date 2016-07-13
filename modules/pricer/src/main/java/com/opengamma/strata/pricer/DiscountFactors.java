@@ -12,12 +12,10 @@ import com.opengamma.strata.basics.currency.Currency;
 import com.opengamma.strata.basics.date.DayCount;
 import com.opengamma.strata.collect.Messages;
 import com.opengamma.strata.collect.array.DoubleArray;
-import com.opengamma.strata.data.MarketDataName;
 import com.opengamma.strata.market.MarketDataView;
 import com.opengamma.strata.market.ValueType;
 import com.opengamma.strata.market.curve.Curve;
 import com.opengamma.strata.market.curve.CurveInfoType;
-import com.opengamma.strata.market.curve.CurveName;
 import com.opengamma.strata.market.curve.InterpolatedNodalCurve;
 import com.opengamma.strata.market.param.CurrencyParameterSensitivities;
 import com.opengamma.strata.market.param.CurrencyParameterSensitivity;
@@ -71,18 +69,6 @@ public interface DiscountFactors
    * @return the currency
    */
   public abstract Currency getCurrency();
-
-  /**
-   * Finds the market data structure underlying this instance with the specified name.
-   * <p>
-   * This is most commonly used to find a {@link Curve} using a {@link CurveName}.
-   * If the market data cannot be found, empty is returned.
-   * 
-   * @param <T>  the type of the market data value
-   * @param name  the name to find
-   * @return the market data value, empty if not found
-   */
-  public abstract <T> Optional<T> findData(MarketDataName<T> name);
 
   //-------------------------------------------------------------------------
   @Override
@@ -139,7 +125,7 @@ public interface DiscountFactors
    * when comparing the valuation date to the specified date.
    * <p>
    * The z-spread is a parallel shift applied to continuously compounded rates or periodic
-   * compounded rates of the discounting curve. 
+   * compounded rates of the discounting curve.
    * <p>
    * If the valuation date is on or after the specified date, the discount factor is 1.
    * 
@@ -167,7 +153,7 @@ public interface DiscountFactors
    * when comparing the valuation date to the specified date.
    * <p>
    * The z-spread is a parallel shift applied to continuously compounded rates or periodic
-   * compounded rates of the discounting curve. 
+   * compounded rates of the discounting curve.
    * <p>
    * If the valuation date is on or after the specified date, the discount factor is 1.
    * <p>
@@ -190,7 +176,7 @@ public interface DiscountFactors
    * Gets the continuously compounded zero rate for the specified date.
    * <p>
    * The continuously compounded zero rate is coherent to {@link #discountFactor(LocalDate)} along with 
-   * year fraction which is computed internally in each implementation. 
+   * year fraction which is computed internally in each implementation.
    * 
    * @param date  the date to discount to
    * @return the zero rate
@@ -296,7 +282,7 @@ public interface DiscountFactors
    * The sensitivity refers to the result of {@link #discountFactorWithSpread(LocalDate, double, CompoundedRateType, int)}.
    * <p>
    * The z-spread is a parallel shift applied to continuously compounded rates or periodic
-   * compounded rates of the discounting curve. 
+   * compounded rates of the discounting curve.
    * 
    * @param date  the date to discount to
    * @param zSpread  the z-spread
@@ -323,7 +309,7 @@ public interface DiscountFactors
    * The sensitivity refers to the result of {@link #discountFactorWithSpread(LocalDate, double, CompoundedRateType, int)}.
    * <p>
    * The z-spread is a parallel shift applied to continuously compounded rates or periodic
-   * compounded rates of the discounting curve. 
+   * compounded rates of the discounting curve.
    * <p>
    * The year fraction must be based on {@code #relativeYearFraction(LocalDate)}.
    * 
@@ -352,7 +338,7 @@ public interface DiscountFactors
    * The sensitivity refers to the result of {@link #discountFactorWithSpread(LocalDate, double, CompoundedRateType, int)}.
    * <p>
    * The z-spread is a parallel shift applied to continuously compounded rates or periodic
-   * compounded rates of the discounting curve. 
+   * compounded rates of the discounting curve.
    * <p>
    * This method allows the currency of the sensitivity to differ from the currency of the market data.
    * 
@@ -384,7 +370,7 @@ public interface DiscountFactors
    * The sensitivity refers to the result of {@link #discountFactorWithSpread(LocalDate, double, CompoundedRateType, int)}.
    * <p>
    * The z-spread is a parallel shift applied to continuously compounded rates or periodic
-   * compounded rates of the discounting curve. 
+   * compounded rates of the discounting curve.
    * <p>
    * This method allows the currency of the sensitivity to differ from the currency of the market data.
    * <p>

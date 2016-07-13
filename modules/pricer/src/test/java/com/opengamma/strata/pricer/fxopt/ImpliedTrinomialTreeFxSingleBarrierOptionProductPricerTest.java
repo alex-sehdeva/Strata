@@ -25,11 +25,11 @@ import com.opengamma.strata.pricer.rate.ImmutableRatesProvider;
 import com.opengamma.strata.pricer.sensitivity.RatesFiniteDifferenceSensitivityCalculator;
 import com.opengamma.strata.product.common.LongShort;
 import com.opengamma.strata.product.fx.ResolvedFxSingle;
-import com.opengamma.strata.product.fxopt.BarrierType;
-import com.opengamma.strata.product.fxopt.KnockType;
 import com.opengamma.strata.product.fxopt.ResolvedFxSingleBarrierOption;
 import com.opengamma.strata.product.fxopt.ResolvedFxVanillaOption;
-import com.opengamma.strata.product.fxopt.SimpleConstantContinuousBarrier;
+import com.opengamma.strata.product.option.BarrierType;
+import com.opengamma.strata.product.option.KnockType;
+import com.opengamma.strata.product.option.SimpleConstantContinuousBarrier;
 
 /**
  * Test {@link ImpliedTrinomialTreeFxSingleBarrierOptionProductPricer}.
@@ -46,17 +46,17 @@ public class ImpliedTrinomialTreeFxSingleBarrierOptionProductPricerTest {
   // providers - flat
   private static final ImmutableRatesProvider RATE_PROVIDER_FLAT =
       RatesProviderFxDataSets.createProviderEurUsdFlat(VAL_DATE);
-  private static final BlackVolatilitySmileFxProvider VOL_PROVIDER_FLAT =
+  private static final BlackFxOptionSmileVolatilities VOL_PROVIDER_FLAT =
       FxVolatilitySmileDataSet.createVolatilitySmileProvider5FlatFlat(VAL_DATETIME);
   // providers
   private static final ImmutableRatesProvider RATE_PROVIDER =
       RatesProviderFxDataSets.createProviderEURUSD(VAL_DATE);
-  private static final BlackVolatilitySmileFxProvider VOL_PROVIDER =
+  private static final BlackFxOptionSmileVolatilities VOL_PROVIDER =
       FxVolatilitySmileDataSet.createVolatilitySmileProvider5(VAL_DATETIME);
   // providers - after maturity
   private static final ImmutableRatesProvider RATE_PROVIDER_AFTER =
       RatesProviderFxDataSets.createProviderEURUSD(EXPIRY_DATE.plusDays(1));
-  private static final BlackVolatilitySmileFxProvider VOL_PROVIDER_AFTER =
+  private static final BlackFxOptionSmileVolatilities VOL_PROVIDER_AFTER =
       FxVolatilitySmileDataSet.createVolatilitySmileProvider5(EXPIRY_DATETIME.plusDays(1));
 
   private static final double NOTIONAL = 100_000_000d;
@@ -301,7 +301,7 @@ public class ImpliedTrinomialTreeFxSingleBarrierOptionProductPricerTest {
     ImpliedTrinomialTreeFxSingleBarrierOptionProductPricer pricer =
         new ImpliedTrinomialTreeFxSingleBarrierOptionProductPricer(21);
     CurrencyParameterSensitivities computed =
-        pricer.presentValueCurveParameterSensitivity(CALL_UKI_C, RATE_PROVIDER, VOL_PROVIDER);
+        pricer.presentValueRatesSensitivity(CALL_UKI_C, RATE_PROVIDER, VOL_PROVIDER);
     RatesFiniteDifferenceSensitivityCalculator calc = new RatesFiniteDifferenceSensitivityCalculator(1.0e-5);
     CurrencyParameterSensitivities expected =
         calc.sensitivity(RATE_PROVIDER, p -> pricer.presentValue(CALL_UKI_C, p, VOL_PROVIDER));
@@ -335,7 +335,7 @@ public class ImpliedTrinomialTreeFxSingleBarrierOptionProductPricerTest {
   }
 
   public void test_dataMismatch() {
-    assertThrowsIllegalArg(() -> PRICER_70.presentValueCurveParameterSensitivity(CALL_DKO, RATE_PROVIDER,
+    assertThrowsIllegalArg(() -> PRICER_70.presentValueRatesSensitivity(CALL_DKO, RATE_PROVIDER,
         VOL_PROVIDER, DATA_39));
   }
 

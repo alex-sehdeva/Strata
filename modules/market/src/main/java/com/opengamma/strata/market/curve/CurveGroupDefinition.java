@@ -104,7 +104,7 @@ public final class CurveGroupDefinition
   }
 
   /**
-   * Returns a curve group definition with the specified name and containing the specified entries. 
+   * Returns a curve group definition with the specified name and containing the specified entries.
    * <p>
    * The Jacobian matrices are computed. The Present Value sensitivity to Market quotes are not computed.
    *
@@ -160,6 +160,26 @@ public final class CurveGroupDefinition
     if (builder.computePvSensitivityToMarketQuote) {
       builder.computeJacobian = true;
     }
+  }
+
+  //-------------------------------------------------------------------------
+  /**
+   * Returns a filtered version of this definition with no invalid nodes.
+   * <p>
+   * A curve is formed of a number of nodes, each of which has an associated date.
+   * To be valid, the curve node dates must be in order from earliest to latest.
+   * This method applies rules to remove invalid nodes.
+   * 
+   * @param valuationDate  the valuation date
+   * @param refData  the reference data
+   * @return the resolved definition, that should be used in preference to this one
+   * @throws IllegalArgumentException if the curve nodes are invalid
+   */
+  public CurveGroupDefinition filtered(LocalDate valuationDate, ReferenceData refData) {
+    List<NodalCurveDefinition> filtered = curveDefinitions.stream()
+        .map(ncd -> ncd.filtered(valuationDate, refData))
+        .collect(toImmutableList());
+    return new CurveGroupDefinition(name, entries, filtered, computeJacobian, computePvSensitivityToMarketQuote);
   }
 
   //-------------------------------------------------------------------------

@@ -33,10 +33,10 @@ import com.opengamma.strata.product.bond.BondFutureOptionTrade;
 import com.opengamma.strata.product.bond.BondFutureTrade;
 import com.opengamma.strata.product.bond.FixedCouponBond;
 import com.opengamma.strata.product.bond.FixedCouponBondYieldConvention;
-import com.opengamma.strata.product.common.FutureOptionPremiumStyle;
+import com.opengamma.strata.product.option.FutureOptionPremiumStyle;
 
 /**
- * Data sets of bond, bond future and bond future option. 
+ * Data sets of bond, bond future and bond future option.
  */
 public final class BondDataSets {
 

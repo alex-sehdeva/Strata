@@ -58,6 +58,10 @@ import com.opengamma.strata.product.swap.InflationRateCalculation;
  * The legal entity of this bond is identified by {@code legalEntityId}.
  * The enum, {@code yieldConvention}, specifies the yield computation convention.
  * The accrued interest must be computed with {@code dayCount}.
+ * 
+ * <h4>Price</h4>
+ * Strata uses <i>decimal prices</i> for bonds in the trade model, pricers and market data.
+ * For example, a price of 99.32% is represented in Strata by 0.9932.
  */
 @BeanDefinition(constructorScope = "package")
 public final class CapitalIndexedBond
@@ -134,7 +138,7 @@ public final class CapitalIndexedBond
   @PropertyDefinition(validate = "notNull")
   private final DaysAdjustment settlementDateOffset;
   /**
-   * Ex-coupon period. 
+   * Ex-coupon period.
    * <p>
    * Some bonds trade ex-coupons before the coupon payment. The coupon is paid not to the
    * owner of the bond on the payment date but to the owner of the bond on the detachment date.

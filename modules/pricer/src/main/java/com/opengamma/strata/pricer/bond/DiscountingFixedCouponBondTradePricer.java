@@ -27,6 +27,10 @@ import com.opengamma.strata.product.bond.ResolvedFixedCouponBondTrade;
  * Pricer for for rate fixed coupon bond trades.
  * <p>
  * This function provides the ability to price a {@link ResolvedFixedCouponBondTrade}.
+ * 
+ * <h4>Price</h4>
+ * Strata uses <i>decimal prices</i> for bonds in the trade model, pricers and market data.
+ * For example, a price of 99.32% is represented in Strata by 0.9932.
  */
 public class DiscountingFixedCouponBondTradePricer {
 
@@ -67,7 +71,7 @@ public class DiscountingFixedCouponBondTradePricer {
    * The present value of the trade is the value on the valuation date.
    * The result is expressed using the payment currency of the bond.
    * <p>
-   * Coupon payments of the underlying product are considered based on the settlement date of the trade. 
+   * Coupon payments of the underlying product are considered based on the settlement date of the trade.
    * 
    * @param trade  the trade
    * @param provider  the rates provider
@@ -88,7 +92,7 @@ public class DiscountingFixedCouponBondTradePricer {
    * The z-spread is a parallel shift applied to continuously compounded rates or periodic
    * compounded rates of the discounting curve.
    * <p>
-   * Coupon payments of the underlying product are considered based on the settlement date of the trade. 
+   * Coupon payments of the underlying product are considered based on the settlement date of the trade.
    * 
    * @param trade  the trade
    * @param provider  the rates provider
@@ -126,7 +130,7 @@ public class DiscountingFixedCouponBondTradePricer {
    * The present value of the trade is the value on the valuation date.
    * The result is expressed using the payment currency of the bond.
    * <p>
-   * Coupon payments of the underlying product are considered based on the settlement date of the trade. 
+   * Coupon payments of the underlying product are considered based on the settlement date of the trade.
    * 
    * @param trade  the trade
    * @param provider  the rates provider
@@ -173,7 +177,7 @@ public class DiscountingFixedCouponBondTradePricer {
    * The z-spread is a parallel shift applied to continuously compounded rates or periodic
    * compounded rates of the discounting curve.
    * <p>
-   * Coupon payments of the underlying product are considered based on the settlement date of the trade. 
+   * Coupon payments of the underlying product are considered based on the settlement date of the trade.
    * 
    * @param trade  the trade
    * @param provider  the rates provider
@@ -237,7 +241,7 @@ public class DiscountingFixedCouponBondTradePricer {
    * The present value sensitivity of the trade is the sensitivity of the present value to
    * the underlying curves.
    * <p>
-   * Coupon payments of the underlying product are considered based on the settlement date of the trade. 
+   * Coupon payments of the underlying product are considered based on the settlement date of the trade.
    * 
    * @param trade  the trade
    * @param provider  the rates provider
@@ -262,7 +266,7 @@ public class DiscountingFixedCouponBondTradePricer {
    * The z-spread is a parallel shift applied to continuously compounded rates or periodic
    * compounded rates of the discounting curve.
    * <p>
-   * Coupon payments of the underlying product are considered based on the settlement date of the trade. 
+   * Coupon payments of the underlying product are considered based on the settlement date of the trade.
    * 
    * @param trade  the trade
    * @param provider  the rates provider

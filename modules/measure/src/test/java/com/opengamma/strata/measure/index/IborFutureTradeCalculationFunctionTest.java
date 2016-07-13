@@ -27,9 +27,9 @@ import com.opengamma.strata.calc.runner.CalculationParameters;
 import com.opengamma.strata.calc.runner.FunctionRequirements;
 import com.opengamma.strata.collect.result.Result;
 import com.opengamma.strata.data.FieldName;
-import com.opengamma.strata.data.scenario.CurrencyValuesArray;
+import com.opengamma.strata.data.scenario.CurrencyScenarioArray;
+import com.opengamma.strata.data.scenario.DoubleScenarioArray;
 import com.opengamma.strata.data.scenario.ScenarioMarketData;
-import com.opengamma.strata.data.scenario.ValuesArray;
 import com.opengamma.strata.market.curve.ConstantCurve;
 import com.opengamma.strata.market.curve.Curve;
 import com.opengamma.strata.market.curve.CurveId;
@@ -41,6 +41,7 @@ import com.opengamma.strata.measure.curve.TestMarketDataMap;
 import com.opengamma.strata.measure.rate.RatesMarketDataLookup;
 import com.opengamma.strata.pricer.index.DiscountingIborFutureTradePricer;
 import com.opengamma.strata.pricer.rate.RatesProvider;
+import com.opengamma.strata.product.SecurityId;
 import com.opengamma.strata.product.index.IborFutureTrade;
 import com.opengamma.strata.product.index.ResolvedIborFutureTrade;
 import com.opengamma.strata.product.index.type.IborFutureConventions;
@@ -54,7 +55,7 @@ public class IborFutureTradeCalculationFunctionTest {
   private static final ReferenceData REF_DATA = ReferenceData.standard();
   private static final double MARKET_PRICE = 99.42;
   public static final IborFutureTrade TRADE = IborFutureConventions.USD_LIBOR_3M_QUARTERLY_IMM.createTrade(
-      LocalDate.of(2014, 9, 12), Period.ofMonths(1), 2, 5, 1_000_000, 0.9998, REF_DATA);
+      LocalDate.of(2014, 9, 12), SecurityId.of("test", "test"), Period.ofMonths(1), 2, 5, 1_000_000, 0.9998, REF_DATA);
   public static final ResolvedIborFutureTrade RTRADE = TRADE.resolve(REF_DATA);
 
   private static final StandardId SEC_ID = TRADE.getProduct().getSecurityId().getStandardId();
@@ -85,20 +86,21 @@ public class IborFutureTradeCalculationFunctionTest {
     IborFutureTradeCalculationFunction function = new IborFutureTradeCalculationFunction();
     ScenarioMarketData md = marketData();
     RatesProvider provider = RATES_LOOKUP.ratesProvider(md.scenario(0));
+    double expectedPrice = DiscountingIborFutureTradePricer.DEFAULT.price(RTRADE, provider);
     CurrencyAmount expectedPv = DiscountingIborFutureTradePricer.DEFAULT.presentValue(RTRADE, provider, MARKET_PRICE / 100);
     double expectedParSpread = DiscountingIborFutureTradePricer.DEFAULT.parSpread(RTRADE, provider, MARKET_PRICE / 100);
 
     Set<Measure> measures = ImmutableSet.of(
+        Measures.UNIT_PRICE,
         Measures.PRESENT_VALUE,
-        Measures.PRESENT_VALUE_MULTI_CCY,
         Measures.PAR_SPREAD);
     assertThat(function.calculate(TRADE, measures, PARAMS, md, REF_DATA))
         .containsEntry(
-            Measures.PRESENT_VALUE, Result.success(CurrencyValuesArray.of(ImmutableList.of(expectedPv))))
+            Measures.UNIT_PRICE, Result.success(DoubleScenarioArray.of(ImmutableList.of(expectedPrice))))
         .containsEntry(
-            Measures.PRESENT_VALUE_MULTI_CCY, Result.success(CurrencyValuesArray.of(ImmutableList.of(expectedPv))))
+            Measures.PRESENT_VALUE, Result.success(CurrencyScenarioArray.of(ImmutableList.of(expectedPv))))
         .containsEntry(
-            Measures.PAR_SPREAD, Result.success(ValuesArray.of(ImmutableList.of(expectedParSpread))));
+            Measures.PAR_SPREAD, Result.success(DoubleScenarioArray.of(ImmutableList.of(expectedParSpread))));
   }
 
   //-------------------------------------------------------------------------

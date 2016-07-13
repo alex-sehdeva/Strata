@@ -5,13 +5,21 @@
  */
 package com.opengamma.strata.product.swaption;
 
+import com.opengamma.strata.product.common.SettlementType;
+
 /**
- * An interface that can return the settlement type and settlement method of swaptions.
+ * Defines how the swaption will be settled.
+ * <p>
+ * Settlement can be physical, where an interest rate swap is created, or cash,
+ * where a monetary amount is exchanged.
+ * 
+ * @see PhysicalSwaptionSettlement
+ * @see CashSwaptionSettlement
  */
 public interface SwaptionSettlement {
 
   /**
-   * Gets the settlement type of swaption. 
+   * Gets the settlement type of swaption.
    * <p>
    * The settlement type is cash settlement or physical settlement, defined in {@link SettlementType}.
    * 

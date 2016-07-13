@@ -46,6 +46,11 @@ import com.opengamma.strata.product.TradeInfo;
  * <p>
  * A bond future is a financial instrument that is based on the future value of
  * a basket of fixed coupon bonds. The profit or loss of a bond future is settled daily.
+ * 
+ * <h4>Price</h4>
+ * Strata uses <i>decimal prices</i> for bond futures in the trade model, pricers and market data.
+ * This is coherent with the pricing of {@link FixedCouponBond}. The bond futures delivery is a bond
+ * for an amount computed from the bond future price, a conversion factor and the accrued interest.
  */
 @BeanDefinition
 public final class BondFutureSecurity
@@ -84,30 +89,30 @@ public final class BondFutureSecurity
   @PropertyDefinition(validate = "notEmpty")
   private final ImmutableList<Double> conversionFactors;
   /**
-   * The last trading date. 
+   * The last trading date.
    * <p>
-   * The future security is traded until this date. 
+   * The future security is traded until this date.
    */
   @PropertyDefinition(validate = "notNull")
   private final LocalDate lastTradeDate;
   /**
    * The first notice date.
    * <p>
-   * The first date on which the delivery of the underlying is authorized. 
+   * The first date on which the delivery of the underlying is authorized.
    */
   @PropertyDefinition(validate = "notNull")
   private final LocalDate firstNoticeDate;
   /**
    * The last notice date.
    * <p>
-   * The last date on which the delivery of the underlying is authorized. 
+   * The last date on which the delivery of the underlying is authorized.
    */
   @PropertyDefinition(validate = "notNull")
   private final LocalDate lastNoticeDate;
   /**
    * The first delivery date.
    * <p>
-   * The first date on which the underlying is delivered. 
+   * The first date on which the underlying is delivered.
    * <p>
    * If not specified, the date will be computed from {@code firstNoticeDate} by using
    * {@code settlementDateOffset} in the first element of the delivery basket.
@@ -117,7 +122,7 @@ public final class BondFutureSecurity
   /**
    * The last notice date.
    * <p>
-   * The last date on which the underlying is delivered. 
+   * The last date on which the underlying is delivered.
    * <p>
    * If not specified, the date will be computed from {@code lastNoticeDate} by using
    * {@code settlementDateOffset} in the first element of the delivery basket.

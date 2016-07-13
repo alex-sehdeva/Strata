@@ -30,9 +30,11 @@ import com.opengamma.strata.market.curve.CurveMetadata;
 import com.opengamma.strata.market.curve.CurveName;
 import com.opengamma.strata.market.curve.Curves;
 import com.opengamma.strata.market.curve.InterpolatedNodalCurve;
-import com.opengamma.strata.market.interpolator.CurveInterpolator;
-import com.opengamma.strata.market.interpolator.CurveInterpolators;
+import com.opengamma.strata.market.curve.NodalCurve;
+import com.opengamma.strata.market.curve.interpolator.CurveInterpolator;
+import com.opengamma.strata.market.curve.interpolator.CurveInterpolators;
 import com.opengamma.strata.market.param.CurrencyParameterSensitivities;
+import com.opengamma.strata.market.param.ParameterMetadata;
 import com.opengamma.strata.market.sensitivity.PointSensitivityBuilder;
 
 /**
@@ -134,7 +136,7 @@ public class SimplePriceIndexValuesTest {
     for (int i = 0; i < TEST_MONTHS.length; i++) {
       YearMonth lastMonth = YearMonth.from(USCPI_TS.getLatestDate());
       double nbMonthLast = VAL_MONTH.until(lastMonth, MONTHS);
-      InterpolatedNodalCurve finalCurve = CURVE.withNode(0, nbMonthLast, USCPI_TS.getLatestValue());
+      InterpolatedNodalCurve finalCurve = CURVE.withNode(nbMonthLast, USCPI_TS.getLatestValue(), ParameterMetadata.empty());
       double nbMonth = VAL_MONTH.until(TEST_MONTHS[i], MONTHS);
       OptionalDouble valueTs = USCPI_TS.get(TEST_MONTHS[i].atEndOfMonth());
       double adj = SEASONALITY.get(TEST_MONTHS[i].getMonthValue() - 1);
@@ -173,7 +175,7 @@ public class SimplePriceIndexValuesTest {
           // copy indices to provide access in lambda
           int jIndex = j;
           int kIndex = k;
-          InterpolatedNodalCurve bumpedCurve = INSTANCE.getCurve()
+          NodalCurve bumpedCurve = INSTANCE.getCurve()
               .withPerturbation((idx, value, meta) -> (idx == jIndex) ? (kIndex == 0 ? -shift : shift) : 0d);
           SimplePriceIndexValues curveShifted = INSTANCE.withCurve(bumpedCurve);
           valueFd[k] = curveShifted.value(TEST_OBS[i]);

@@ -46,7 +46,7 @@ public class ResolvedSwapTest {
   private static final IborRateComputation GBP_LIBOR_3M_2014_06_28 =
       IborRateComputation.of(GBP_LIBOR_3M, date(2014, 6, 28), REF_DATA);
   private static final NotionalExchange NOTIONAL_EXCHANGE =
-      NotionalExchange.of(DATE_2014_10_01, CurrencyAmount.of(GBP, 2000d));
+      NotionalExchange.of(CurrencyAmount.of(GBP, 2000d), DATE_2014_10_01);
   private static final RateAccrualPeriod RAP = RateAccrualPeriod.builder()
       .startDate(DATE_2014_06_30)
       .endDate(DATE_2014_09_30)
@@ -91,7 +91,7 @@ public class ResolvedSwapTest {
     assertEquals(test.getStartDate(), LEG1.getStartDate());
     assertEquals(test.getEndDate(), LEG1.getEndDate());
     assertEquals(test.isCrossCurrency(), true);
-    assertEquals(test.allCurrencies(), ImmutableSet.of(GBP, USD));
+    assertEquals(test.allPaymentCurrencies(), ImmutableSet.of(GBP, USD));
     assertEquals(test.allIndices(), ImmutableSet.of(GBP_LIBOR_3M));
   }
 
@@ -99,7 +99,7 @@ public class ResolvedSwapTest {
     ResolvedSwap test = ResolvedSwap.of(LEG1);
     assertEquals(test.getLegs(), ImmutableSet.of(LEG1));
     assertEquals(test.isCrossCurrency(), false);
-    assertEquals(test.allCurrencies(), ImmutableSet.of(GBP));
+    assertEquals(test.allPaymentCurrencies(), ImmutableSet.of(GBP));
     assertEquals(test.allIndices(), ImmutableSet.of(GBP_LIBOR_3M));
   }
 
@@ -109,7 +109,7 @@ public class ResolvedSwapTest {
         .build();
     assertEquals(test.getLegs(), ImmutableSet.of(LEG1));
     assertEquals(test.isCrossCurrency(), false);
-    assertEquals(test.allCurrencies(), ImmutableSet.of(GBP));
+    assertEquals(test.allPaymentCurrencies(), ImmutableSet.of(GBP));
     assertEquals(test.allIndices(), ImmutableSet.of(GBP_LIBOR_3M));
   }
 

@@ -6,6 +6,7 @@
 package com.opengamma.strata.market.curve;
 
 import com.opengamma.strata.collect.array.DoubleArray;
+import com.opengamma.strata.market.param.ParameterMetadata;
 import com.opengamma.strata.market.param.ParameterPerturbation;
 
 /**
@@ -33,6 +34,21 @@ public interface NodalCurve
    */
   @Override
   public abstract NodalCurve withMetadata(CurveMetadata metadata);
+
+  /**
+   * Gets the metadata of the parameter at the specified index.
+   * <p>
+   * If there is no specific parameter metadata, {@link SimpleCurveParameterMetadata} will be created.
+   * 
+   * @param parameterIndex  the zero-based index of the parameter to get
+   * @return the metadata of the parameter
+   * @throws IndexOutOfBoundsException if the index is invalid
+   */
+  @Override
+  public default ParameterMetadata getParameterMetadata(int parameterIndex) {
+    return getMetadata().getParameterMetadata().map(pm -> pm.get(parameterIndex))
+        .orElse(SimpleCurveParameterMetadata.of(getMetadata().getXValueType(), getXValues().get(parameterIndex)));
+  }
 
   /**
    * Gets the known x-values of the curve.
@@ -64,6 +80,17 @@ public interface NodalCurve
    */
   public abstract NodalCurve withYValues(DoubleArray values);
 
+  /**
+   * Returns a new curve with the specified x-values and y-values.
+   * <p>
+   * This allows the x values and y-values of the curve to be changed.
+   * 
+   * @param xValues  the new x-values for the curve
+   * @param yValues  the new y-values for the curve
+   * @return the new curve
+   */
+  public abstract NodalCurve withValues(DoubleArray xValues, DoubleArray yValues);
+
   //-------------------------------------------------------------------------
   @Override
   abstract NodalCurve withParameter(int parameterIndex, double newValue);
@@ -72,5 +99,21 @@ public interface NodalCurve
   default NodalCurve withPerturbation(ParameterPerturbation perturbation) {
     return (NodalCurve) Curve.super.withPerturbation(perturbation);
   }
+
+  /**
+   * Returns a new curve with an additional node, specifying the parameter metadata.
+   * <p>
+   * The result will contain the specified node.
+   * If the x-value equals an existing x-value, the y-value will be changed.
+   * If the x-value does not equal an existing x-value, the node will be added.
+   * <p>
+   * The result will only contain the specified parameter metadata if this curve also has parameter meta-data.
+   * 
+   * @param x  the new x-value
+   * @param y  the new y-value
+   * @param paramMetadata  the new parameter metadata
+   * @return the updated curve
+   */
+  public abstract NodalCurve withNode(double x, double y, ParameterMetadata paramMetadata);
 
 }

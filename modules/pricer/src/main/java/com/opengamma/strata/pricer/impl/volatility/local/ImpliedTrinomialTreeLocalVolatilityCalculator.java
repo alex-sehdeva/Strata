@@ -5,6 +5,9 @@
  */
 package com.opengamma.strata.pricer.impl.volatility.local;
 
+import static com.opengamma.strata.market.curve.interpolator.CurveInterpolators.LINEAR;
+import static com.opengamma.strata.market.curve.interpolator.CurveInterpolators.TIME_SQUARE;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -16,78 +19,69 @@ import com.opengamma.strata.collect.array.DoubleMatrix;
 import com.opengamma.strata.collect.tuple.DoublesPair;
 import com.opengamma.strata.collect.tuple.Pair;
 import com.opengamma.strata.market.ValueType;
-import com.opengamma.strata.market.interpolator.CurveExtrapolators;
-import com.opengamma.strata.market.interpolator.CurveInterpolators;
 import com.opengamma.strata.market.surface.DefaultSurfaceMetadata;
 import com.opengamma.strata.market.surface.InterpolatedNodalSurface;
 import com.opengamma.strata.market.surface.Surface;
 import com.opengamma.strata.market.surface.SurfaceMetadata;
 import com.opengamma.strata.market.surface.SurfaceName;
-import com.opengamma.strata.math.impl.interpolation.CombinedInterpolatorExtrapolator;
-import com.opengamma.strata.math.impl.interpolation.GridInterpolator2D;
-import com.opengamma.strata.math.impl.interpolation.Interpolator1D;
+import com.opengamma.strata.market.surface.interpolator.GridSurfaceInterpolator;
+import com.opengamma.strata.market.surface.interpolator.SurfaceInterpolator;
 import com.opengamma.strata.pricer.fxopt.RecombiningTrinomialTreeData;
 import com.opengamma.strata.pricer.impl.option.BlackFormulaRepository;
 import com.opengamma.strata.pricer.impl.option.BlackScholesFormulaRepository;
 
 /**
- * Local volatility calculation based on trinomila tree model. 
+ * Local volatility calculation based on trinomila tree model.
  * <p>
  * Emanuel Derman, Iraj Kani and Neil Chriss, "Implied Trinomial Trees of the Volatility Smile" (1996).
  */
 public class ImpliedTrinomialTreeLocalVolatilityCalculator implements LocalVolatilityCalculator {
 
   /**
-   * Default interpolator and extrapolator for spot dimension. 
+   * The default interpolator.
    */
-  private static final Interpolator1D LINEAR_FLAT = CombinedInterpolatorExtrapolator.of(
-      CurveInterpolators.LINEAR.getName(), CurveExtrapolators.FLAT.getName(), CurveExtrapolators.FLAT.getName());
-  /**
-   * Default interpolator and extrapolator for time dimension. 
-   */
-  private static final Interpolator1D TIMESQ_FLAT = CombinedInterpolatorExtrapolator.of(
-      CurveInterpolators.TIME_SQUARE.getName(), CurveExtrapolators.FLAT.getName(), CurveExtrapolators.FLAT.getName());
+  private static final GridSurfaceInterpolator DEFAULT_INTERPOLATOR = GridSurfaceInterpolator.of(TIME_SQUARE, LINEAR);
 
   /**
-   * The number of steps in trinomial tree. 
+   * The number of steps in trinomial tree.
    */
   private final int nSteps;
   /**
-   * The maximum value of time in trinomial tree. 
+   * The maximum value of time in trinomial tree.
    * <p>
    * The time step in the tree is then given by {@code maxTime/nSteps}. 
    */
   private final double maxTime;
   /**
-   * The interpolator for local volatilities. 
+   * The interpolator for local volatilities.
    * <p>
-   * The resulting local volatilities are interpolated by this {@code GridInterpolator2D} along time and spot dimensions. 
+   * The resulting local volatilities are interpolated by this interpolator along time and spot dimensions.
    */
-  private final GridInterpolator2D interpolator;
+  private final SurfaceInterpolator interpolator;
 
   /**
-   * Creates an instance with default setups. 
+   * Creates an instance with default setups.
    * <p>
-   * The number of time steps is 20, and the tree covers up to 3 years.  
+   * The number of time steps is 20, and the tree covers up to 3 years.
    * The time square linear interpolator is used for time direction, 
-   * whereas the linear interpolator is used for spot dimension. 
-   * The extrapolation is flat for both the dimensions. 
+   * whereas the linear interpolator is used for spot dimension.
+   * The extrapolation is flat for both the dimensions.
    */
   public ImpliedTrinomialTreeLocalVolatilityCalculator() {
-    this(20, 3d, new GridInterpolator2D(TIMESQ_FLAT, LINEAR_FLAT));
+    this(20, 3d, DEFAULT_INTERPOLATOR);
   }
 
   /**
    * Creates an instance with the number of steps and maximum time fixed.
    * <p>
    * The default interpolators are used: the time square linear interpolator for time direction, 
-   * the linear interpolator for spot dimension, and flat extrapolator for both the dimensions. 
+   * the linear interpolator for spot dimension, and flat extrapolator for both the dimensions.
    * 
    * @param nSteps  the number of steps
    * @param maxTime  the maximum time
    */
   public ImpliedTrinomialTreeLocalVolatilityCalculator(int nSteps, double maxTime) {
-    this(nSteps, maxTime, new GridInterpolator2D(TIMESQ_FLAT, LINEAR_FLAT));
+    this(nSteps, maxTime, DEFAULT_INTERPOLATOR);
   }
 
   /**
@@ -97,7 +91,7 @@ public class ImpliedTrinomialTreeLocalVolatilityCalculator implements LocalVolat
    * @param maxTime  the maximum time 
    * @param interpolator  the interpolator
    */
-  public ImpliedTrinomialTreeLocalVolatilityCalculator(int nSteps, double maxTime, GridInterpolator2D interpolator) {
+  public ImpliedTrinomialTreeLocalVolatilityCalculator(int nSteps, double maxTime, SurfaceInterpolator interpolator) {
     this.nSteps = nSteps;
     this.maxTime = maxTime;
     this.interpolator = interpolator;
@@ -124,7 +118,7 @@ public class ImpliedTrinomialTreeLocalVolatilityCalculator implements LocalVolat
         .zValueType(ValueType.LOCAL_VOLATILITY)
         .surfaceName(SurfaceName.of("localVol_" + impliedVolatilitySurface.getName()))
         .build();
-    return InterpolatedNodalSurface.of(
+    return InterpolatedNodalSurface.ofUnsorted(
         metadata,
         DoubleArray.ofUnsafe(localVolData.get(0)),
         DoubleArray.ofUnsafe(localVolData.get(1)),
@@ -133,7 +127,7 @@ public class ImpliedTrinomialTreeLocalVolatilityCalculator implements LocalVolat
   }
 
   /**
-   * Calibrate trinomial tree to implied volatility surface. 
+   * Calibrate trinomial tree to implied volatility surface.
    * 
    * @param impliedVolatilitySurface  the implied volatility surface
    * @param spot  the spot
@@ -212,7 +206,7 @@ public class ImpliedTrinomialTreeLocalVolatilityCalculator implements LocalVolat
         .zValueType(ValueType.LOCAL_VOLATILITY)
         .surfaceName(SurfaceName.of("localVol_" + callPriceSurface.getName()))
         .build();
-    return InterpolatedNodalSurface.of(
+    return InterpolatedNodalSurface.ofUnsorted(
         metadata,
         DoubleArray.ofUnsafe(timeRes),
         DoubleArray.ofUnsafe(spotRes),

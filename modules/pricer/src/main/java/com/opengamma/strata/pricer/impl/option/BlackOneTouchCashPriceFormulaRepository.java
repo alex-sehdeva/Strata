@@ -11,7 +11,7 @@ import com.opengamma.strata.collect.ArgChecker;
 import com.opengamma.strata.collect.array.DoubleArray;
 import com.opengamma.strata.math.impl.statistics.distribution.NormalDistribution;
 import com.opengamma.strata.math.impl.statistics.distribution.ProbabilityDistribution;
-import com.opengamma.strata.product.fxopt.SimpleConstantContinuousBarrier;
+import com.opengamma.strata.product.option.SimpleConstantContinuousBarrier;
 
 /**
  * The price function to compute the price of one-touch or no-touch (cash-or-nothing) option in the Black world.
@@ -32,7 +32,7 @@ public class BlackOneTouchCashPriceFormulaRepository {
   private static final double SMALL = 1.0e-6;
 
   /**
-   * Computes the price of a one-touch/no-touch option. 
+   * Computes the price of a one-touch/no-touch option.
    * 
    * @param spot  the spot 
    * @param timeToExpiry  the time to expiry 
@@ -77,9 +77,9 @@ public class BlackOneTouchCashPriceFormulaRepository {
   }
 
   /**
-   * Computes the price and derivatives of a one-touch/no-touch option. 
+   * Computes the price and derivatives of a one-touch/no-touch option.
    * <p>
-   * The derivatives are [0] spot, [1] rate, [2] cost-of-carry, [3] volatility, [4] timeToExpiry, [5] spot twice. 
+   * The derivatives are [0] spot, [1] rate, [2] cost-of-carry, [3] volatility, [4] timeToExpiry, [5] spot twice.
    * 
    * @param spot  the spot 
    * @param timeToExpiry  the time to expiry 
@@ -253,8 +253,8 @@ public class BlackOneTouchCashPriceFormulaRepository {
     return e;
   }
 
-  // The firstDerivatives are [0] s, [1] z, [2] lognormalVolT, [3] mu, [4] lambda. 
-  // The second derivatives are [0] s twice, [1] z twice, [2] s and z. 
+  // The firstDerivatives are [0] s, [1] z, [2] lognormalVolT, [3] mu, [4] lambda.
+  // The second derivatives are [0] s twice, [1] z twice, [2] s and z.
   private double getFAdjoint(
       double s,
       double z,

@@ -193,7 +193,7 @@ public final class NotionalSchedule
    * @param refData  the reference data to use
    * @return the list of payment events
    */
-  ImmutableList<PaymentEvent> createEvents(
+  ImmutableList<SwapPaymentEvent> createEvents(
       List<NotionalPaymentPeriod> payPeriods,
       LocalDate initialExchangeDate,
       ReferenceData refData) {
@@ -217,7 +217,7 @@ public final class NotionalSchedule
    * @param refData  the reference data to use
    * @return the list of payment events
    */
-  static ImmutableList<PaymentEvent> createEvents(
+  static ImmutableList<SwapPaymentEvent> createEvents(
       List<NotionalPaymentPeriod> payPeriods,
       LocalDate initialExchangeDate,
       boolean initialExchange,
@@ -240,48 +240,38 @@ public final class NotionalSchedule
   }
 
   // create notional exchange events when FxReset specified
-  private static ImmutableList<PaymentEvent> createFxResetEvents(
+  private static ImmutableList<SwapPaymentEvent> createFxResetEvents(
       List<NotionalPaymentPeriod> payPeriods,
       LocalDate initialExchangeDate,
       ReferenceData refData) {
 
-    ImmutableList.Builder<PaymentEvent> events = ImmutableList.builder();
+    ImmutableList.Builder<SwapPaymentEvent> events = ImmutableList.builder();
     for (int i = 0; i < payPeriods.size(); i++) {
       NotionalPaymentPeriod period = payPeriods.get(i);
       LocalDate startPaymentDate = (i == 0 ? initialExchangeDate : payPeriods.get(i - 1).getPaymentDate());
       if (period.getFxResetObservation().isPresent()) {
         FxIndexObservation observation = period.getFxResetObservation().get();
         // notional out at start of period
-        events.add(FxResetNotionalExchange.builder()
-            .paymentDate(startPaymentDate)
-            .notionalAmount(period.getNotionalAmount().negated())
-            .observation(observation)
-            .build());
+        events.add(FxResetNotionalExchange.of(
+            period.getNotionalAmount().negated(), startPaymentDate, observation));
         // notional in at end of period
-        events.add(FxResetNotionalExchange.builder()
-            .paymentDate(period.getPaymentDate())
-            .notionalAmount(period.getNotionalAmount())
-            .observation(observation)
-            .build());
+        events.add(FxResetNotionalExchange.of(
+            period.getNotionalAmount(), period.getPaymentDate(), observation));
       } else {
         // handle weird swap where only some periods have FX reset
         // notional out at start of period
-        events.add(NotionalExchange.builder()
-            .paymentDate(startPaymentDate)
-            .paymentAmount(CurrencyAmount.of(period.getCurrency(), -period.getNotionalAmount().getAmount()))
-            .build());
+        events.add(NotionalExchange.of(
+            CurrencyAmount.of(period.getCurrency(), -period.getNotionalAmount().getAmount()), startPaymentDate));
         // notional in at end of period
-        events.add(NotionalExchange.builder()
-            .paymentDate(period.getPaymentDate())
-            .paymentAmount(CurrencyAmount.of(period.getCurrency(), period.getNotionalAmount().getAmount()))
-            .build());
+        events.add(NotionalExchange.of(
+            CurrencyAmount.of(period.getCurrency(), period.getNotionalAmount().getAmount()), period.getPaymentDate()));
       }
     }
     return events.build();
   }
 
   // create notional exchange events when no FxReset
-  private static ImmutableList<PaymentEvent> createStandardEvents(
+  private static ImmutableList<SwapPaymentEvent> createStandardEvents(
       List<NotionalPaymentPeriod> payPeriods,
       LocalDate initialExchangePaymentDate,
       boolean initialExchange,
@@ -289,31 +279,23 @@ public final class NotionalSchedule
       boolean finalExchange) {
 
     NotionalPaymentPeriod firstPeriod = payPeriods.get(0);
-    ImmutableList.Builder<PaymentEvent> events = ImmutableList.builder();
+    ImmutableList.Builder<SwapPaymentEvent> events = ImmutableList.builder();
     if (initialExchange) {
-      events.add(NotionalExchange.builder()
-          .paymentDate(initialExchangePaymentDate)
-          .paymentAmount(firstPeriod.getNotionalAmount().negated())
-          .build());
+      events.add(NotionalExchange.of(firstPeriod.getNotionalAmount().negated(), initialExchangePaymentDate));
     }
     if (intermediateExchange) {
       for (int i = 0; i < payPeriods.size() - 1; i++) {
         NotionalPaymentPeriod period1 = payPeriods.get(i);
         NotionalPaymentPeriod period2 = payPeriods.get(i + 1);
         if (period1.getNotionalAmount().getAmount() != period2.getNotionalAmount().getAmount()) {
-          events.add(NotionalExchange.builder()
-              .paymentDate(period1.getPaymentDate())
-              .paymentAmount(period1.getNotionalAmount().minus(period2.getNotionalAmount()))
-              .build());
+          events.add(NotionalExchange.of(
+              period1.getNotionalAmount().minus(period2.getNotionalAmount()), period1.getPaymentDate()));
         }
       }
     }
     if (finalExchange) {
       NotionalPaymentPeriod lastPeriod = payPeriods.get(payPeriods.size() - 1);
-      events.add(NotionalExchange.builder()
-          .paymentDate(lastPeriod.getPaymentDate())
-          .paymentAmount(lastPeriod.getNotionalAmount())
-          .build());
+      events.add(NotionalExchange.of(lastPeriod.getNotionalAmount(), lastPeriod.getPaymentDate()));
     }
     return events.build();
   }

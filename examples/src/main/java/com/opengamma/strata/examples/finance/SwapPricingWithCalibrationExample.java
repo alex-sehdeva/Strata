@@ -6,7 +6,6 @@
 package com.opengamma.strata.examples.finance;
 
 import static com.opengamma.strata.measure.StandardComponents.marketDataFactory;
-import static java.util.stream.Collectors.toMap;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -29,7 +28,7 @@ import com.opengamma.strata.collect.io.ResourceLocator;
 import com.opengamma.strata.collect.timeseries.LocalDateDoubleTimeSeries;
 import com.opengamma.strata.data.MarketData;
 import com.opengamma.strata.data.ObservableId;
-import com.opengamma.strata.examples.data.ExampleData;
+import com.opengamma.strata.examples.marketdata.ExampleData;
 import com.opengamma.strata.loader.csv.FixingSeriesCsvLoader;
 import com.opengamma.strata.loader.csv.QuotesCsvLoader;
 import com.opengamma.strata.loader.csv.RatesCalibrationCsvLoader;
@@ -134,11 +133,13 @@ public class SwapPricingWithCalibrationExample {
     // create the market data
     MarketData marketData = MarketData.of(VAL_DATE, quotes, fixings);
 
+    // the reference data, such as holidays and securities
+    ReferenceData refData = ReferenceData.standard();
+
     // load the curve definition
-    List<CurveGroupDefinition> defns =
+    Map<CurveGroupName, CurveGroupDefinition> defns =
         RatesCalibrationCsvLoader.load(GROUPS_RESOURCE, SETTINGS_RESOURCE, CALIBRATION_RESOURCE);
-    Map<CurveGroupName, CurveGroupDefinition> defnMap = defns.stream().collect(toMap(def -> def.getName(), def -> def));
-    CurveGroupDefinition curveGroupDefinition = defnMap.get(CURVE_GROUP_NAME);
+    CurveGroupDefinition curveGroupDefinition = defns.get(CURVE_GROUP_NAME).filtered(VAL_DATE, refData);
 
     // the configuration that defines how to create the curves when a curve group is requested
     MarketDataConfig marketDataConfig = MarketDataConfig.builder()
@@ -149,9 +150,6 @@ public class SwapPricingWithCalibrationExample {
     CalculationFunctions functions = StandardComponents.calculationFunctions();
     RatesMarketDataLookup ratesLookup = RatesMarketDataLookup.of(curveGroupDefinition);
     CalculationRules rules = CalculationRules.of(functions, ratesLookup);
-
-    // the reference data, such as holidays and securities
-    ReferenceData refData = ReferenceData.standard();
 
     // calibrate the curves and calculate the results
     MarketDataRequirements reqs = MarketDataRequirements.of(rules, trades, columns, refData);

@@ -32,11 +32,11 @@ import com.opengamma.strata.collect.timeseries.LocalDateDoubleTimeSeriesBuilder;
 import com.opengamma.strata.market.curve.Curve;
 import com.opengamma.strata.market.curve.Curves;
 import com.opengamma.strata.market.curve.InterpolatedNodalCurve;
+import com.opengamma.strata.market.curve.interpolator.CurveInterpolator;
+import com.opengamma.strata.market.curve.interpolator.CurveInterpolators;
 import com.opengamma.strata.market.explain.ExplainKey;
 import com.opengamma.strata.market.explain.ExplainMap;
 import com.opengamma.strata.market.explain.ExplainMapBuilder;
-import com.opengamma.strata.market.interpolator.CurveInterpolator;
-import com.opengamma.strata.market.interpolator.CurveInterpolators;
 import com.opengamma.strata.market.param.CurrencyParameterSensitivities;
 import com.opengamma.strata.market.sensitivity.PointSensitivities;
 import com.opengamma.strata.market.sensitivity.PointSensitivityBuilder;
@@ -214,7 +214,7 @@ public class ForwardOvernightAveragedRateComputationFnTest {
   }
 
   /**
-   * Test for the case where publication lag=0, effective offset=1 (CHF conventions) and no cutoff period. 
+   * Test for the case where publication lag=0, effective offset=1 (CHF conventions) and no cutoff period.
    * The arithmetic average coupons are used mainly in USD. This test is more for completeness than a real case.
    */
   public void rateChfNoCutOff() {
@@ -244,7 +244,7 @@ public class ForwardOvernightAveragedRateComputationFnTest {
   }
 
   /**
-   * Test for the case where publication lag=0, effective offset=1 (CHF conventions) and no cutoff period. 
+   * Test for the case where publication lag=0, effective offset=1 (CHF conventions) and no cutoff period.
    * The arithmetic average coupons are used mainly in USD. This test is more for completeness than a real case.
    */
   public void rateChfNoCutOffSensitivity() {
@@ -270,7 +270,7 @@ public class ForwardOvernightAveragedRateComputationFnTest {
     }
   }
 
-  /** Test for the case where publication lag=0, effective offset=0 (GBP conventions) and no cutoff period. 
+  /** Test for the case where publication lag=0, effective offset=0 (GBP conventions) and no cutoff period.
     *   The arithmetic average coupons are used mainly in USD. This test is more for completeness than a real case. */
   public void rateGbpNoCutOff() {
     OvernightIndexRates mockRates = mock(OvernightIndexRates.class);
@@ -298,7 +298,7 @@ public class ForwardOvernightAveragedRateComputationFnTest {
     assertEquals(rateExpected, rateComputed, TOLERANCE_RATE);
   }
 
-  /** Test for the case where publication lag=0, effective offset=0 (GBP conventions) and no cutoff period. 
+  /** Test for the case where publication lag=0, effective offset=0 (GBP conventions) and no cutoff period.
     *   The arithmetic average coupons are used mainly in USD. This test is more for completeness than a real case. */
   public void rateGbpNoCutOffSensitivity() {
     OvernightIndexRates mockRates = mock(OvernightIndexRates.class);

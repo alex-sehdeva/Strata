@@ -20,11 +20,14 @@ import java.time.ZoneId;
 import org.testng.annotations.Test;
 
 import com.opengamma.strata.basics.ReferenceData;
+import com.opengamma.strata.basics.currency.AdjustablePayment;
 import com.opengamma.strata.basics.currency.CurrencyAmount;
-import com.opengamma.strata.basics.currency.Payment;
 import com.opengamma.strata.product.TradeInfo;
 import com.opengamma.strata.product.common.LongShort;
 import com.opengamma.strata.product.fx.FxSingle;
+import com.opengamma.strata.product.option.BarrierType;
+import com.opengamma.strata.product.option.KnockType;
+import com.opengamma.strata.product.option.SimpleConstantContinuousBarrier;
 
 /**
  * Test {@link FxSingleBarrierOptionTrade}.
@@ -54,7 +57,8 @@ public class FxSingleBarrierOptionTradeTest {
   private static final CurrencyAmount REBATE = CurrencyAmount.of(USD, 5.0e4);
   private static final FxSingleBarrierOption PRODUCT = FxSingleBarrierOption.of(VANILLA_OPTION, BARRIER, REBATE);
   private static final TradeInfo TRADE_INFO = TradeInfo.of(date(2014, 11, 12));
-  private static final Payment PREMIUM = Payment.of(CurrencyAmount.of(EUR, NOTIONAL * 0.05), date(2014, 11, 14));
+  private static final AdjustablePayment PREMIUM =
+      AdjustablePayment.of(CurrencyAmount.of(EUR, NOTIONAL * 0.05), date(2014, 11, 14));
 
   //-------------------------------------------------------------------------
   public void test_builder() {
@@ -78,7 +82,7 @@ public class FxSingleBarrierOptionTradeTest {
     ResolvedFxSingleBarrierOptionTrade expected = ResolvedFxSingleBarrierOptionTrade.builder()
         .info(TRADE_INFO)
         .product(PRODUCT.resolve(REF_DATA))
-        .premium(PREMIUM)
+        .premium(PREMIUM.resolve(REF_DATA))
         .build();
     assertEquals(base.resolve(REF_DATA), expected);
   }
@@ -92,7 +96,7 @@ public class FxSingleBarrierOptionTradeTest {
         .build();
     FxSingleBarrierOptionTrade test2 = FxSingleBarrierOptionTrade.builder()
         .product(FxSingleBarrierOption.of(VANILLA_OPTION, BARRIER))
-        .premium(Payment.of(CurrencyAmount.of(EUR, NOTIONAL * 0.01), date(2014, 11, 13)))
+        .premium(AdjustablePayment.of(CurrencyAmount.of(EUR, NOTIONAL * 0.01), date(2014, 11, 13)))
         .build();
     coverImmutableBean(test1);
     coverBeanEquals(test1, test2);

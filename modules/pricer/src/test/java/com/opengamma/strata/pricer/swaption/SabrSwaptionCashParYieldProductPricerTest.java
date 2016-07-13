@@ -25,6 +25,9 @@ import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.TreeMap;
 
 import org.testng.annotations.Test;
 
@@ -42,6 +45,7 @@ import com.opengamma.strata.basics.schedule.StubConvention;
 import com.opengamma.strata.basics.value.ValueSchedule;
 import com.opengamma.strata.collect.DoubleArrayMath;
 import com.opengamma.strata.collect.array.DoubleArray;
+import com.opengamma.strata.collect.tuple.DoublesPair;
 import com.opengamma.strata.market.model.SabrParameterType;
 import com.opengamma.strata.market.param.CurrencyParameterSensitivities;
 import com.opengamma.strata.market.param.CurrencyParameterSensitivity;
@@ -67,9 +71,9 @@ import com.opengamma.strata.product.swap.ResolvedSwapLeg;
 import com.opengamma.strata.product.swap.Swap;
 import com.opengamma.strata.product.swap.SwapLeg;
 import com.opengamma.strata.product.swap.SwapLegType;
-import com.opengamma.strata.product.swaption.CashSettlement;
-import com.opengamma.strata.product.swaption.CashSettlementMethod;
-import com.opengamma.strata.product.swaption.PhysicalSettlement;
+import com.opengamma.strata.product.swaption.CashSwaptionSettlement;
+import com.opengamma.strata.product.swaption.CashSwaptionSettlementMethod;
+import com.opengamma.strata.product.swaption.PhysicalSwaptionSettlement;
 import com.opengamma.strata.product.swaption.ResolvedSwaption;
 import com.opengamma.strata.product.swaption.Swaption;
 
@@ -155,10 +159,8 @@ public class SabrSwaptionCashParYieldProductPricerTest {
   private static final ResolvedSwap RSWAP_REC = SWAP_REC.resolve(REF_DATA);
   private static final Swap SWAP_PAY = Swap.of(FIXED_LEG_PAY, IBOR_LEG_REC);
   private static final ResolvedSwapLeg RFIXED_LEG_REC = FIXED_LEG_REC.resolve(REF_DATA);
-  private static final CashSettlement PAR_YIELD = CashSettlement.builder()
-      .cashSettlementMethod(CashSettlementMethod.PAR_YIELD)
-      .settlementDate(SETTLE)
-      .build();
+  private static final CashSwaptionSettlement PAR_YIELD =
+      CashSwaptionSettlement.of(SETTLE, CashSwaptionSettlementMethod.PAR_YIELD);
   private static final ResolvedSwaption SWAPTION_REC_LONG = Swaption
       .builder()
       .expiryDate(AdjustableDate.of(MATURITY.toLocalDate(), BDA_MF))
@@ -204,7 +206,7 @@ public class SabrSwaptionCashParYieldProductPricerTest {
       .expiryTime(MATURITY.toLocalTime())
       .expiryZone(MATURITY.getZone())
       .longShort(LongShort.LONG)
-      .swaptionSettlement(PhysicalSettlement.DEFAULT)
+      .swaptionSettlement(PhysicalSwaptionSettlement.DEFAULT)
       .underlying(SWAP_REC)
       .build().
       resolve(REF_DATA);
@@ -392,7 +394,7 @@ public class SabrSwaptionCashParYieldProductPricerTest {
     double forward = PRICER_SWAP.parRate(RSWAP_REC, RATE_PROVIDER);
     ResolvedSwapLeg fixedLeg = SWAPTION_REC_LONG.getUnderlying().getLegs(SwapLegType.FIXED).get(0);
     double annuityCash = PRICER_SWAP.getLegPricer().annuityCash(fixedLeg, forward);
-    CashSettlement cashSettlement = (CashSettlement) SWAPTION_REC_LONG.getSwaptionSettlement();
+    CashSwaptionSettlement cashSettlement = (CashSwaptionSettlement) SWAPTION_REC_LONG.getSwaptionSettlement();
     double discountSettle = RATE_PROVIDER.discountFactor(fixedLeg.getCurrency(), cashSettlement.getSettlementDate());
     double pvbpCash = Math.abs(annuityCash * discountSettle);
     CurrencyAmount deltaRec = PRICER.presentValueDelta(SWAPTION_REC_LONG, RATE_PROVIDER, VOL_PROVIDER);
@@ -413,7 +415,7 @@ public class SabrSwaptionCashParYieldProductPricerTest {
     double forward = PRICER_SWAP.parRate(RSWAP_REC, RATE_PROVIDER_AT_MATURITY);
     ResolvedSwapLeg fixedLeg = SWAPTION_REC_LONG.getUnderlying().getLegs(SwapLegType.FIXED).get(0);
     double annuityCash = PRICER_SWAP.getLegPricer().annuityCash(fixedLeg, forward);
-    CashSettlement cashSettlement = (CashSettlement) SWAPTION_REC_LONG.getSwaptionSettlement();
+    CashSwaptionSettlement cashSettlement = (CashSwaptionSettlement) SWAPTION_REC_LONG.getSwaptionSettlement();
     double discountSettle = RATE_PROVIDER_AT_MATURITY.discountFactor(fixedLeg.getCurrency(), cashSettlement.getSettlementDate());
     double pvbpCash = Math.abs(annuityCash * discountSettle);
     CurrencyAmount deltaRec =
@@ -444,9 +446,9 @@ public class SabrSwaptionCashParYieldProductPricerTest {
     SwaptionVolatilities volSabr = SwaptionSabrRateVolatilityDataSet.getVolatilitiesEur(VAL_DATE_TIME.toLocalDate(), false);
     double impliedVol = PRICER.impliedVolatility(SWAPTION_REC_LONG, RATE_PROVIDER, volSabr);
     SurfaceMetadata blackMeta =
-        Surfaces.swaptionBlackExpiryTenor("CST", VOL_PROVIDER.getDayCount(), VOL_PROVIDER.getConvention());
+        Surfaces.blackVolatilityByExpiryTenor("CST", VOL_PROVIDER.getDayCount());
     SwaptionVolatilities volCst = BlackSwaptionExpiryTenorVolatilities.of(
-        ConstantSurface.of(blackMeta, impliedVol), VOL_PROVIDER.getValuationDateTime());
+        VOL_PROVIDER.getConvention(), VOL_PROVIDER.getValuationDateTime(), ConstantSurface.of(blackMeta, impliedVol));
     // To obtain a constant volatility surface which create a sticky strike sensitivity
     PointSensitivityBuilder pointRec =
         PRICER.presentValueSensitivityRatesStickyStrike(SWAPTION_REC_LONG, RATE_PROVIDER, volSabr);
@@ -584,8 +586,6 @@ public class SabrSwaptionCashParYieldProductPricerTest {
       SwaptionSabrSensitivity sens = (SwaptionSabrSensitivity) point;
       assertEquals(sens.getCurrency(), EUR);
       assertEquals(sens.getConvention(), SwaptionSabrRateVolatilityDataSet.SWAP_CONVENTION_EUR);
-      assertEquals(sens.getExpiry(), SWAPTION_REC_LONG.getExpiry());
-      assertEquals(sens.getTenor(), (double) TENOR_YEAR);
       if (sens.getSensitivityType() == type) {
         assertEquals(sens.getSensitivity(), expected, NOTIONAL * TOL);
         return;
@@ -728,14 +728,20 @@ public class SabrSwaptionCashParYieldProductPricerTest {
     SurfaceMetadata[] metadata = new SurfaceMetadata[] {SwaptionSabrRateVolatilityDataSet.META_ALPHA,
         SwaptionSabrRateVolatilityDataSet.META_BETA_EUR, SwaptionSabrRateVolatilityDataSet.META_RHO,
         SwaptionSabrRateVolatilityDataSet.META_NU};
+    // x-y-value order does not match sorted order in surface, thus sort it
     CurrencyParameterSensitivities sensiExpected = CurrencyParameterSensitivities.empty();
     for (int i = 0; i < exps.length; ++i) {
       int size = exps[i].length;
-      List<ParameterMetadata> paramMetadata = new ArrayList<ParameterMetadata>(size);
-      List<Double> sensi = new ArrayList<Double>(size);
+      Map<DoublesPair, Double> sensiMap = new TreeMap<>();
       for (int j = 0; j < size; ++j) {
-        paramMetadata.add(SwaptionSurfaceExpiryTenorParameterMetadata.of(exps[i][j][0], exps[i][j][1]));
-        sensi.add(exps[i][j][2]);
+        sensiMap.put(DoublesPair.of(exps[i][j][0], exps[i][j][1]), exps[i][j][2]);
+      }
+      List<ParameterMetadata> paramMetadata = new ArrayList<>(size);
+      List<Double> sensi = new ArrayList<>();
+      for (Entry<DoublesPair, Double> entry : sensiMap.entrySet()) {
+        paramMetadata.add(SwaptionSurfaceExpiryTenorParameterMetadata.of(
+            entry.getKey().getFirst(), entry.getKey().getSecond()));
+        sensi.add(entry.getValue());
       }
       SurfaceMetadata surfaceMetadata = metadata[i].withParameterMetadata(paramMetadata);
       sensiExpected = sensiExpected.combinedWith(

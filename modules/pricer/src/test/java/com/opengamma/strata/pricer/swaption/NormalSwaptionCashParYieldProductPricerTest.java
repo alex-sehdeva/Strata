@@ -6,6 +6,7 @@
 package com.opengamma.strata.pricer.swaption;
 
 import static com.opengamma.strata.basics.currency.Currency.USD;
+import static com.opengamma.strata.basics.date.DayCounts.ACT_365F;
 import static com.opengamma.strata.basics.index.IborIndices.USD_LIBOR_3M;
 import static com.opengamma.strata.collect.TestHelper.assertThrowsIllegalArg;
 import static com.opengamma.strata.product.common.BuySell.BUY;
@@ -41,9 +42,9 @@ import com.opengamma.strata.product.common.PutCall;
 import com.opengamma.strata.product.swap.ResolvedSwap;
 import com.opengamma.strata.product.swap.Swap;
 import com.opengamma.strata.product.swap.SwapLegType;
-import com.opengamma.strata.product.swaption.CashSettlement;
-import com.opengamma.strata.product.swaption.CashSettlementMethod;
-import com.opengamma.strata.product.swaption.PhysicalSettlement;
+import com.opengamma.strata.product.swaption.CashSwaptionSettlement;
+import com.opengamma.strata.product.swaption.CashSwaptionSettlementMethod;
+import com.opengamma.strata.product.swaption.PhysicalSwaptionSettlement;
 import com.opengamma.strata.product.swaption.ResolvedSwaption;
 import com.opengamma.strata.product.swaption.Swaption;
 
@@ -79,9 +80,8 @@ public class NormalSwaptionCashParYieldProductPricerTest {
       .toTrade(SWAPTION_PAST_EXERCISE_DATE, SWAPTION_PAST_EXERCISE_DATE, SWAPTION_PAST_EXERCISE_DATE.plusYears(10),
           BUY, NOTIONAL, STRIKE).getProduct();
   private static final LocalDate SETTLE_DATE = USD_LIBOR_3M.getEffectiveDateOffset().adjust(SWAPTION_EXERCISE_DATE, REF_DATA);
-  private static final CashSettlement PAR_YIELD = CashSettlement.builder()
-      .cashSettlementMethod(CashSettlementMethod.PAR_YIELD)
-      .settlementDate(SETTLE_DATE).build();
+  private static final CashSwaptionSettlement PAR_YIELD =
+      CashSwaptionSettlement.of(SETTLE_DATE, CashSwaptionSettlementMethod.PAR_YIELD);
   private static final ResolvedSwaption SWAPTION_REC_LONG = Swaption.builder()
       .swaptionSettlement(PAR_YIELD)
       .expiryDate(AdjustableDate.of(SWAPTION_EXERCISE_DATE))
@@ -225,7 +225,7 @@ public class NormalSwaptionCashParYieldProductPricerTest {
 
   public void test_physicalSettlement() {
     Swaption swaption = Swaption.builder()
-        .swaptionSettlement(PhysicalSettlement.DEFAULT)
+        .swaptionSettlement(PhysicalSwaptionSettlement.DEFAULT)
         .expiryDate(AdjustableDate.of(SWAPTION_EXERCISE_DATE))
         .expiryTime(SWAPTION_EXPIRY_TIME)
         .expiryZone(SWAPTION_EXPIRY_ZONE)
@@ -467,27 +467,24 @@ public class NormalSwaptionCashParYieldProductPricerTest {
   public void implied_volatility_round_trip() { // Compute pv and then implied vol from PV and compare with direct implied vol
     CurrencyAmount pvLongRec =
         PRICER_SWAPTION.presentValue(SWAPTION_REC_LONG, RATE_PROVIDER, VOL_PROVIDER);
-    double impliedLongRecComputed =
-        PRICER_SWAPTION.impliedVolatilityFromPresentValue(SWAPTION_REC_LONG, RATE_PROVIDER,
-            VOL_PROVIDER.getDayCount(), pvLongRec.getAmount());
+    double impliedLongRecComputed = PRICER_SWAPTION.impliedVolatilityFromPresentValue(
+        SWAPTION_REC_LONG, RATE_PROVIDER, ACT_365F, pvLongRec.getAmount());
     double impliedLongRecInterpolated =
         PRICER_SWAPTION.impliedVolatility(SWAPTION_REC_LONG, RATE_PROVIDER, VOL_PROVIDER);
     assertEquals(impliedLongRecComputed, impliedLongRecInterpolated, TOL);
 
     CurrencyAmount pvLongPay =
         PRICER_SWAPTION.presentValue(SWAPTION_PAY_LONG, RATE_PROVIDER, VOL_PROVIDER);
-    double impliedLongPayComputed =
-        PRICER_SWAPTION.impliedVolatilityFromPresentValue(SWAPTION_PAY_LONG, RATE_PROVIDER,
-            VOL_PROVIDER.getDayCount(), pvLongPay.getAmount());
+    double impliedLongPayComputed = PRICER_SWAPTION.impliedVolatilityFromPresentValue(
+        SWAPTION_PAY_LONG, RATE_PROVIDER, ACT_365F, pvLongPay.getAmount());
     double impliedLongPayInterpolated =
         PRICER_SWAPTION.impliedVolatility(SWAPTION_PAY_LONG, RATE_PROVIDER, VOL_PROVIDER);
     assertEquals(impliedLongPayComputed, impliedLongPayInterpolated, TOL);
 
     CurrencyAmount pvShortRec =
         PRICER_SWAPTION.presentValue(SWAPTION_REC_SHORT, RATE_PROVIDER, VOL_PROVIDER);
-    double impliedShortRecComputed =
-        PRICER_SWAPTION.impliedVolatilityFromPresentValue(SWAPTION_REC_SHORT, RATE_PROVIDER,
-            VOL_PROVIDER.getDayCount(), pvShortRec.getAmount());
+    double impliedShortRecComputed = PRICER_SWAPTION.impliedVolatilityFromPresentValue(
+        SWAPTION_REC_SHORT, RATE_PROVIDER, ACT_365F, pvShortRec.getAmount());
     double impliedShortRecInterpolated =
         PRICER_SWAPTION.impliedVolatility(SWAPTION_REC_SHORT, RATE_PROVIDER, VOL_PROVIDER);
     assertEquals(impliedShortRecComputed, impliedShortRecInterpolated, TOL);
@@ -496,8 +493,8 @@ public class NormalSwaptionCashParYieldProductPricerTest {
   public void implied_volatility_wrong_sign() {
     CurrencyAmount pvLongRec =
         PRICER_SWAPTION.presentValue(SWAPTION_REC_LONG, RATE_PROVIDER, VOL_PROVIDER);
-    assertThrowsIllegalArg(() -> PRICER_SWAPTION.impliedVolatilityFromPresentValue(SWAPTION_REC_LONG, RATE_PROVIDER,
-        VOL_PROVIDER.getDayCount(), -pvLongRec.getAmount()));
+    assertThrowsIllegalArg(() -> PRICER_SWAPTION.impliedVolatilityFromPresentValue(
+        SWAPTION_REC_LONG, RATE_PROVIDER, ACT_365F, -pvLongRec.getAmount()));
   }
 
   //-------------------------------------------------------------------------
@@ -579,7 +576,7 @@ public class NormalSwaptionCashParYieldProductPricerTest {
     assertEquals(computedRec.getCurrency(), USD);
     assertEquals(computedRec.getSensitivity(), expectedRec, FD_EPS * NOTIONAL);
     assertEquals(computedRec.getConvention(), SwaptionNormalVolatilityDataSets.USD_1Y_LIBOR3M);
-    assertEquals(computedRec.getExpiry(), SWAPTION_REC_LONG.getExpiry());
+    assertEquals(computedRec.getExpiry(), VOL_PROVIDER.relativeTime(SWAPTION_REC_LONG.getExpiry()));
     assertEquals(computedRec.getTenor(), SWAP_TENOR_YEAR, TOL);
     assertEquals(computedRec.getStrike(), STRIKE, TOL);
     assertEquals(computedRec.getForward(), PRICER_SWAP.parRate(RSWAP_REC, RATE_PROVIDER), TOL);
@@ -593,7 +590,7 @@ public class NormalSwaptionCashParYieldProductPricerTest {
     assertEquals(computedPay.getCurrency(), USD);
     assertEquals(computedPay.getSensitivity(), expectedPay, FD_EPS * NOTIONAL);
     assertEquals(computedPay.getConvention(), SwaptionNormalVolatilityDataSets.USD_1Y_LIBOR3M);
-    assertEquals(computedPay.getExpiry(), SWAPTION_PAY_SHORT.getExpiry());
+    assertEquals(computedPay.getExpiry(), VOL_PROVIDER.relativeTime(SWAPTION_PAY_SHORT.getExpiry()));
     assertEquals(computedPay.getTenor(), SWAP_TENOR_YEAR, TOL);
     assertEquals(computedPay.getStrike(), STRIKE, TOL);
     assertEquals(computedPay.getForward(), PRICER_SWAP.parRate(RSWAP_PAY, RATE_PROVIDER), TOL);

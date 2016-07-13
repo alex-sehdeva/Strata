@@ -17,18 +17,18 @@ import com.opengamma.strata.market.sensitivity.PointSensitivityBuilder;
 import com.opengamma.strata.pricer.rate.RatesProvider;
 import com.opengamma.strata.pricer.swap.DiscountingSwapProductPricer;
 import com.opengamma.strata.product.common.PutCall;
+import com.opengamma.strata.product.common.SettlementType;
 import com.opengamma.strata.product.rate.FixedRateComputation;
 import com.opengamma.strata.product.rate.RateComputation;
-import com.opengamma.strata.product.swap.PaymentPeriod;
+import com.opengamma.strata.product.swap.SwapPaymentPeriod;
 import com.opengamma.strata.product.swap.RatePaymentPeriod;
 import com.opengamma.strata.product.swap.ResolvedSwap;
 import com.opengamma.strata.product.swap.ResolvedSwapLeg;
 import com.opengamma.strata.product.swap.Swap;
 import com.opengamma.strata.product.swap.SwapLegType;
-import com.opengamma.strata.product.swaption.CashSettlement;
-import com.opengamma.strata.product.swaption.CashSettlementMethod;
+import com.opengamma.strata.product.swaption.CashSwaptionSettlement;
+import com.opengamma.strata.product.swaption.CashSwaptionSettlementMethod;
 import com.opengamma.strata.product.swaption.ResolvedSwaption;
-import com.opengamma.strata.product.swaption.SettlementType;
 
 /**
  * Pricer for swaption with par yield curve method of cash settlement based on volatilities.
@@ -288,7 +288,7 @@ public class VolatilitySwaptionCashParYieldProductPricer {
     ValueDerivatives annuityDerivative = getSwapPricer().getLegPricer().annuityCashDerivative(fixedLeg, forward);
     double annuityCash = annuityDerivative.getValue();
     double annuityCashDr = annuityDerivative.getDerivative(0);
-    LocalDate settlementDate = ((CashSettlement) swaption.getSwaptionSettlement()).getSettlementDate();
+    LocalDate settlementDate = ((CashSwaptionSettlement) swaption.getSwaptionSettlement()).getSettlementDate();
     double discountSettle = ratesProvider.discountFactor(fixedLeg.getCurrency(), settlementDate);
     double strike = calculateStrike(fixedLeg);
     double tenor = swaptionVolatilities.tenor(fixedLeg.getStartDate(), fixedLeg.getEndDate());
@@ -322,15 +322,14 @@ public class VolatilitySwaptionCashParYieldProductPricer {
       SwaptionVolatilities swaptionVolatilities) {
 
     validate(swaption, ratesProvider, swaptionVolatilities);
-    ZonedDateTime expiryDateTime = swaption.getExpiry();
-    double expiry = swaptionVolatilities.relativeTime(expiryDateTime);
+    double expiry = swaptionVolatilities.relativeTime(swaption.getExpiry());
     ResolvedSwap underlying = swaption.getUnderlying();
     ResolvedSwapLeg fixedLeg = fixedLeg(underlying);
     double tenor = swaptionVolatilities.tenor(fixedLeg.getStartDate(), fixedLeg.getEndDate());
     double strike = calculateStrike(fixedLeg);
     if (expiry < 0d) { // Option has expired already
       return SwaptionSensitivity.of(
-          swaptionVolatilities.getConvention(), expiryDateTime, tenor, strike, 0d, fixedLeg.getCurrency(), 0d);
+          swaptionVolatilities.getConvention(), expiry, tenor, strike, 0d, fixedLeg.getCurrency(), 0d);
     }
     double forward = getSwapPricer().parRate(underlying, ratesProvider);
     double numeraire = calculateNumeraire(swaption, fixedLeg, forward, ratesProvider);
@@ -339,7 +338,7 @@ public class VolatilitySwaptionCashParYieldProductPricer {
     double vega = numeraire * swaptionVolatilities.priceVega(expiry, tenor, putCall, strike, forward, volatility);
     return SwaptionSensitivity.of(
         swaptionVolatilities.getConvention(),
-        expiryDateTime,
+        expiry,
         tenor,
         strike,
         forward,
@@ -364,7 +363,7 @@ public class VolatilitySwaptionCashParYieldProductPricer {
       RatesProvider ratesProvider) {
 
     double annuityCash = swapPricer.getLegPricer().annuityCash(fixedLeg, forward);
-    CashSettlement cashSettlement = (CashSettlement) swaption.getSwaptionSettlement();
+    CashSwaptionSettlement cashSettlement = (CashSwaptionSettlement) swaption.getSwaptionSettlement();
     double discountSettle = ratesProvider.discountFactor(fixedLeg.getCurrency(), cashSettlement.getSettlementDate());
     return Math.abs(annuityCash * discountSettle);
   }
@@ -376,7 +375,7 @@ public class VolatilitySwaptionCashParYieldProductPricer {
    * @return the strike
    */
   protected double calculateStrike(ResolvedSwapLeg fixedLeg) {
-    PaymentPeriod paymentPeriod = fixedLeg.getPaymentPeriods().get(0);
+    SwapPaymentPeriod paymentPeriod = fixedLeg.getPaymentPeriods().get(0);
     ArgChecker.isTrue(paymentPeriod instanceof RatePaymentPeriod, "Payment period must be RatePaymentPeriod");
     RatePaymentPeriod ratePaymentPeriod = (RatePaymentPeriod) paymentPeriod;
     // compounding is caught when par rate is computed
@@ -428,8 +427,8 @@ public class VolatilitySwaptionCashParYieldProductPricer {
     ArgChecker.isFalse(swaption.getUnderlying().isCrossCurrency(), "Underlying swap must be single currency");
     ArgChecker.isTrue(swaption.getSwaptionSettlement().getSettlementType().equals(SettlementType.CASH),
         "Swaption must be cash settlement");
-    CashSettlement cashSettle = (CashSettlement) swaption.getSwaptionSettlement();
-    ArgChecker.isTrue(cashSettle.getCashSettlementMethod().equals(CashSettlementMethod.PAR_YIELD),
+    CashSwaptionSettlement cashSettle = (CashSwaptionSettlement) swaption.getSwaptionSettlement();
+    ArgChecker.isTrue(cashSettle.getMethod().equals(CashSwaptionSettlementMethod.PAR_YIELD),
         "Cash settlement method must be par yield");
   }
 

@@ -7,6 +7,7 @@ package com.opengamma.strata.pricer.bond;
 
 import com.opengamma.strata.basics.currency.CurrencyAmount;
 import com.opengamma.strata.collect.ArgChecker;
+import com.opengamma.strata.product.bond.BondFuture;
 import com.opengamma.strata.product.bond.ResolvedBondFuture;
 import com.opengamma.strata.product.bond.ResolvedBondFutureOption;
 import com.opengamma.strata.product.bond.ResolvedBondFutureOptionTrade;
@@ -15,6 +16,10 @@ import com.opengamma.strata.product.bond.ResolvedBondFutureOptionTrade;
  * Pricer implementation for bond future option.
  * <p>
  * The bond future option is priced based on Black model.
+ * 
+ * <h4>Price</h4>
+ * Strata uses <i>decimal prices</i> for bond futures options in the trade model, pricers and market data.
+ * This is coherent with the pricing of {@link BondFuture}.
  */
 public final class BlackBondFutureOptionMarginedTradePricer extends BondFutureOptionMarginedTradePricer {
 
@@ -83,16 +88,17 @@ public final class BlackBondFutureOptionMarginedTradePricer extends BondFutureOp
    * @param volatilityProvider  the provider of Black volatility
    * @return the price sensitivity
    */
-  public BondFutureOptionSensitivity presentValueSensitivityBlackVolatility(
+  public BondFutureOptionSensitivity presentValueSensitivityModelParamsVolatility(
       ResolvedBondFutureOptionTrade futureOptionTrade,
       LegalEntityDiscountingProvider ratesProvider,
       BlackVolatilityBondFutureProvider volatilityProvider) {
 
     ResolvedBondFuture future = futureOptionTrade.getProduct().getUnderlyingFuture();
     double futurePrice = futureOptionPricer.getFuturePricer().price(future, ratesProvider);
-    return presentValueSensitivityBlackVolatility(futureOptionTrade, ratesProvider, volatilityProvider, futurePrice);
+    return presentValueSensitivityModelParamsVolatility(futureOptionTrade, ratesProvider, volatilityProvider, futurePrice);
   }
 
+  //-------------------------------------------------------------------------
   /**
    * Computes the present value sensitivity to the Black volatility used in the pricing
    * based on the price of the underlying future.
@@ -106,7 +112,7 @@ public final class BlackBondFutureOptionMarginedTradePricer extends BondFutureOp
    * @param futurePrice  the price of the underlying future
    * @return the price sensitivity
    */
-  public BondFutureOptionSensitivity presentValueSensitivityBlackVolatility(
+  public BondFutureOptionSensitivity presentValueSensitivityModelParamsVolatility(
       ResolvedBondFutureOptionTrade futureOptionTrade,
       LegalEntityDiscountingProvider ratesProvider,
       BlackVolatilityBondFutureProvider volatilityProvider,
@@ -114,7 +120,7 @@ public final class BlackBondFutureOptionMarginedTradePricer extends BondFutureOp
 
     ResolvedBondFutureOption product = futureOptionTrade.getProduct();
     BondFutureOptionSensitivity priceSensitivity =
-        futureOptionPricer.priceSensitivityBlackVolatility(product, ratesProvider, volatilityProvider, futurePrice);
+        futureOptionPricer.priceSensitivityModelParamsVolatility(product, ratesProvider, volatilityProvider, futurePrice);
     double factor = futureOptionPricer.marginIndex(product, 1) * futureOptionTrade.getQuantity();
     return priceSensitivity.multipliedBy(factor);
   }

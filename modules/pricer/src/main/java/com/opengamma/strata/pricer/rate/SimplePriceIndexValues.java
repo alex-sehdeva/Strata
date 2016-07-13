@@ -39,6 +39,7 @@ import com.opengamma.strata.collect.timeseries.LocalDateDoubleTimeSeries;
 import com.opengamma.strata.data.MarketDataName;
 import com.opengamma.strata.market.ValueType;
 import com.opengamma.strata.market.curve.InterpolatedNodalCurve;
+import com.opengamma.strata.market.curve.NodalCurve;
 import com.opengamma.strata.market.param.CurrencyParameterSensitivities;
 import com.opengamma.strata.market.param.ParameterMetadata;
 import com.opengamma.strata.market.param.ParameterPerturbation;
@@ -75,11 +76,11 @@ public final class SimplePriceIndexValues
   private final LocalDate valuationDate;
   /**
    * The underlying curve.
-   * Each x-value on the curve is the number of months between the valuation month and the estimation month. 
+   * Each x-value on the curve is the number of months between the valuation month and the estimation month.
    * For example, zero represents the valuation month, one the next month and so on.
    */
   @PropertyDefinition(validate = "notNull")
-  private final InterpolatedNodalCurve curve;
+  private final NodalCurve curve;
   /**
    * The monthly time-series of fixings.
    * This includes the known historical fixings and must not be empty.
@@ -101,14 +102,14 @@ public final class SimplePriceIndexValues
    * The underlying extended curve.
    * This has an additional curve node at the start equal to the last point in the time-series.
    */
-  private final InterpolatedNodalCurve extendedCurve;  // derived, not a property
+  private final NodalCurve extendedCurve;  // derived, not a property
 
   //-------------------------------------------------------------------------
   /**
    * Obtains an instance based on a curve with no seasonality adjustment.
    * <p>
    * The curve is specified by an instance of {@link InterpolatedNodalCurve}.
-   * Each x-value on the curve is the number of months between the valuation month and the estimation month. 
+   * Each x-value on the curve is the number of months between the valuation month and the estimation month.
    * For example, zero represents the valuation month, one the next month and so on.
    * <p>
    * The time-series contains one value per month and must have at least one entry.
@@ -126,7 +127,7 @@ public final class SimplePriceIndexValues
   public static SimplePriceIndexValues of(
       PriceIndex index,
       LocalDate valuationDate,
-      InterpolatedNodalCurve curve,
+      NodalCurve curve,
       LocalDateDoubleTimeSeries fixings) {
 
     return new SimplePriceIndexValues(index, valuationDate, curve, fixings, NO_SEASONALITY);
@@ -136,7 +137,7 @@ public final class SimplePriceIndexValues
    * Obtains an instance based on a curve with seasonality adjustment.
    * <p>
    * The curve is specified by an instance of {@link InterpolatedNodalCurve}.
-   * Each x-value on the curve is the number of months between the valuation month and the estimation month. 
+   * Each x-value on the curve is the number of months between the valuation month and the estimation month.
    * For example, zero represents the valuation month, one the next month and so on.
    * <p>
    * The time-series contains one value per month and must have at least one entry.
@@ -156,7 +157,7 @@ public final class SimplePriceIndexValues
   public static SimplePriceIndexValues of(
       PriceIndex index,
       LocalDate valuationDate,
-      InterpolatedNodalCurve curve,
+      NodalCurve curve,
       LocalDateDoubleTimeSeries fixings,
       DoubleArray seasonality) {
 
@@ -167,16 +168,16 @@ public final class SimplePriceIndexValues
   private SimplePriceIndexValues(
       PriceIndex index,
       LocalDate valuationDate,
-      InterpolatedNodalCurve curve,
+      NodalCurve curve,
       LocalDateDoubleTimeSeries fixings,
       DoubleArray seasonality) {
     ArgChecker.notNull(index, "index");
     ArgChecker.notNull(valuationDate, "valuationDate");
     ArgChecker.notNull(fixings, "fixings");
-    ArgChecker.isFalse(fixings.isEmpty(), "fixings must not be empty");
+    ArgChecker.isFalse(fixings.isEmpty(), "Fixings must not be empty");
     ArgChecker.notNull(curve, "curve");
     ArgChecker.notNull(seasonality, "seasonality");
-    ArgChecker.isTrue(seasonality.size() == 12, "Seasonality list must contail 12 entries");
+    ArgChecker.isTrue(seasonality.size() == 12, "Seasonality list must contain 12 entries");
     curve.getMetadata().getXValueType().checkEquals(ValueType.MONTHS, "Incorrect x-value type for price curve");
     curve.getMetadata().getYValueType().checkEquals(ValueType.PRICE_INDEX, "Incorrect y-value type for price curve");
     this.index = index;
@@ -189,7 +190,7 @@ public final class SimplePriceIndexValues
     double nbMonth = numberOfMonths(lastMonth);
     DoubleArray x = curve.getXValues();
     ArgChecker.isTrue(nbMonth < x.get(0), "The first estimation month should be after the last known index fixing");
-    this.extendedCurve = curve.withNode(0, nbMonth, fixings.getLatestValue());
+    this.extendedCurve = curve.withNode(nbMonth, fixings.getLatestValue(), ParameterMetadata.empty());
   }
 
   //-------------------------------------------------------------------------
@@ -288,7 +289,7 @@ public final class SimplePriceIndexValues
    * @param curve  the new curve
    * @return the new instance
    */
-  public SimplePriceIndexValues withCurve(InterpolatedNodalCurve curve) {
+  public SimplePriceIndexValues withCurve(NodalCurve curve) {
     return new SimplePriceIndexValues(index, valuationDate, curve, fixings, seasonality);
   }
 
@@ -357,7 +358,7 @@ public final class SimplePriceIndexValues
    * For example, zero represents the valuation month, one the next month and so on.
    * @return the value of the property, not null
    */
-  public InterpolatedNodalCurve getCurve() {
+  public NodalCurve getCurve() {
     return curve;
   }
 
@@ -451,8 +452,8 @@ public final class SimplePriceIndexValues
     /**
      * The meta-property for the {@code curve} property.
      */
-    private final MetaProperty<InterpolatedNodalCurve> curve = DirectMetaProperty.ofImmutable(
-        this, "curve", SimplePriceIndexValues.class, InterpolatedNodalCurve.class);
+    private final MetaProperty<NodalCurve> curve = DirectMetaProperty.ofImmutable(
+        this, "curve", SimplePriceIndexValues.class, NodalCurve.class);
     /**
      * The meta-property for the {@code fixings} property.
      */
@@ -533,7 +534,7 @@ public final class SimplePriceIndexValues
      * The meta-property for the {@code curve} property.
      * @return the meta-property, not null
      */
-    public MetaProperty<InterpolatedNodalCurve> curve() {
+    public MetaProperty<NodalCurve> curve() {
       return curve;
     }
 
@@ -590,7 +591,7 @@ public final class SimplePriceIndexValues
 
     private PriceIndex index;
     private LocalDate valuationDate;
-    private InterpolatedNodalCurve curve;
+    private NodalCurve curve;
     private LocalDateDoubleTimeSeries fixings;
     private DoubleArray seasonality;
 
@@ -629,7 +630,7 @@ public final class SimplePriceIndexValues
           this.valuationDate = (LocalDate) newValue;
           break;
         case 95027439:  // curve
-          this.curve = (InterpolatedNodalCurve) newValue;
+          this.curve = (NodalCurve) newValue;
           break;
         case -843784602:  // fixings
           this.fixings = (LocalDateDoubleTimeSeries) newValue;

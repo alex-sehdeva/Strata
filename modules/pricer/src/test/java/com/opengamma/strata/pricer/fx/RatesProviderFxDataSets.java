@@ -23,8 +23,8 @@ import com.opengamma.strata.market.curve.CurveMetadata;
 import com.opengamma.strata.market.curve.CurveName;
 import com.opengamma.strata.market.curve.Curves;
 import com.opengamma.strata.market.curve.InterpolatedNodalCurve;
-import com.opengamma.strata.market.interpolator.CurveInterpolator;
-import com.opengamma.strata.market.interpolator.CurveInterpolators;
+import com.opengamma.strata.market.curve.interpolator.CurveInterpolator;
+import com.opengamma.strata.market.curve.interpolator.CurveInterpolators;
 import com.opengamma.strata.pricer.datasets.RatesProviderDataSets;
 import com.opengamma.strata.pricer.rate.ImmutableRatesProvider;
 import com.opengamma.strata.pricer.rate.RatesProvider;
@@ -130,7 +130,7 @@ public class RatesProviderFxDataSets {
   }
 
   /**
-   * Creates rates provider for EUR, USD with FX matrix. 
+   * Creates rates provider for EUR, USD with FX matrix.
    * 
    * @param valuationDate  the valuation date
    * @return the rates provider
@@ -145,7 +145,7 @@ public class RatesProviderFxDataSets {
   }
 
   /**
-   * Creates rates provider for EUR, USD with FX matrix. 
+   * Creates rates provider for EUR, USD with FX matrix.
    * <p>
    * The discount curves are based on the day count convention, ACT/ACT ISDA.
    * 
@@ -162,7 +162,7 @@ public class RatesProviderFxDataSets {
   }
 
   /**
-   * Creates rates provider for EUR, USD with FX matrix. 
+   * Creates rates provider for EUR, USD with FX matrix.
    * <p>
    * The discount curves are flat.
    * 

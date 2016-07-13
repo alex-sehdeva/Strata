@@ -18,17 +18,21 @@ import com.opengamma.strata.market.sensitivity.PointSensitivities;
 import com.opengamma.strata.market.sensitivity.PointSensitivityBuilder;
 import com.opengamma.strata.pricer.CompoundedRateType;
 import com.opengamma.strata.pricer.rate.RatesProvider;
+import com.opengamma.strata.product.bond.BondPaymentPeriod;
 import com.opengamma.strata.product.bond.CapitalIndexedBondPaymentPeriod;
 import com.opengamma.strata.product.bond.CapitalIndexedBondYieldConvention;
+import com.opengamma.strata.product.bond.KnownAmountBondPaymentPeriod;
 import com.opengamma.strata.product.bond.ResolvedCapitalIndexedBond;
 import com.opengamma.strata.product.bond.ResolvedCapitalIndexedBondTrade;
-import com.opengamma.strata.product.swap.KnownAmountPaymentPeriod;
-import com.opengamma.strata.product.swap.PaymentPeriod;
 
 /**
  * Pricer for for capital index bond trades.
  * <p>
  * This function provides the ability to price a {@link ResolvedCapitalIndexedBondTrade}.
+ * 
+ * <h4>Price</h4>
+ * Strata uses <i>decimal prices</i> for bonds in the trade model, pricers and market data.
+ * For example, a price of 99.32% is represented in Strata by 0.9932.
  */
 public class DiscountingCapitalIndexedBondTradePricer {
 
@@ -43,7 +47,7 @@ public class DiscountingCapitalIndexedBondTradePricer {
   private final DiscountingCapitalIndexedBondProductPricer productPricer;
 
   /**
-   * Creates an instance. 
+   * Creates an instance.
    * 
    * @param productPricer  pricer for {@link ResolvedCapitalIndexedBond}
    */
@@ -59,7 +63,7 @@ public class DiscountingCapitalIndexedBondTradePricer {
    * The present value of the trade is the value on the valuation date.
    * The result is expressed using the payment currency of the bond.
    * <p>
-   * Coupon payments of the underlying product are considered based on the settlement date of the trade. 
+   * Coupon payments of the underlying product are considered based on the settlement date of the trade.
    * 
    * @param trade  the trade
    * @param ratesProvider  the rates provider, used to determine price index values
@@ -89,7 +93,7 @@ public class DiscountingCapitalIndexedBondTradePricer {
    * The z-spread is a parallel shift applied to continuously compounded rates or periodic
    * compounded rates of the discounting curve.
    * <p>
-   * Coupon payments of the underlying product are considered based on the settlement date of the trade. 
+   * Coupon payments of the underlying product are considered based on the settlement date of the trade.
    * 
    * @param trade  the trade
    * @param ratesProvider  the rates provider, used to determine price index values
@@ -128,7 +132,7 @@ public class DiscountingCapitalIndexedBondTradePricer {
    * The present value sensitivity of the trade is the sensitivity of the present value to
    * the underlying curves.
    * <p>
-   * Coupon payments of the underlying product are considered based on the settlement date of the trade. 
+   * Coupon payments of the underlying product are considered based on the settlement date of the trade.
    * 
    * @param trade  the trade
    * @param ratesProvider  the rates provider, used to determine price index values
@@ -156,7 +160,7 @@ public class DiscountingCapitalIndexedBondTradePricer {
    * The present value sensitivity of the trade is the sensitivity of the present value to
    * the underlying curves.
    * <p>
-   * Coupon payments of the underlying product are considered based on the settlement date of the trade. 
+   * Coupon payments of the underlying product are considered based on the settlement date of the trade.
    * 
    * @param trade  the trade
    * @param ratesProvider  the rates provider, used to determine price index values
@@ -189,7 +193,7 @@ public class DiscountingCapitalIndexedBondTradePricer {
    * Calculates the present value of the bond trade from the clean price.
    * <p>
    * Since the sign of the settlement notional is opposite to that of the product, negative amount will be returned 
-   * for positive quantity of trade.  
+   * for positive quantity of trade.
    * 
    * @param trade  the trade
    * @param ratesProvider  the rates provider, used to determine price index values
@@ -237,7 +241,7 @@ public class DiscountingCapitalIndexedBondTradePricer {
    * Calculates the present value of the settlement of the bond trade from the clean price with z-spread.
    * <p>
    * Since the sign of the settlement notional is opposite to that of the product, negative amount will be returned 
-   * for positive quantity of trade.  
+   * for positive quantity of trade.
    * <p>
    * The z-spread is a parallel shift applied to continuously compounded rates or periodic
    * compounded rates of the discounting curve.
@@ -555,7 +559,7 @@ public class DiscountingCapitalIndexedBondTradePricer {
 
     LocalDate valuationDate = ratesProvider.getValuationDate();
     LocalDate settlementDate = trade.getSettlementDate();
-    PaymentPeriod settle = trade.getSettlement();
+    BondPaymentPeriod settle = trade.getSettlement();
     CurrencyAmount cashProduct = productPricer.currentCash(trade.getProduct(), ratesProvider, settlementDate);
     double cashSettle =
         settle.getPaymentDate().isEqual(valuationDate) ? netAmount(trade, ratesProvider).getAmount() : 0d;
@@ -564,10 +568,10 @@ public class DiscountingCapitalIndexedBondTradePricer {
 
   //-------------------------------------------------------------------------
   /**
-   * Calculates the net amount of the settlement of the bond trade. 
+   * Calculates the net amount of the settlement of the bond trade.
    * <p>
    * Since the sign of the settlement notional is opposite to that of the product, negative amount will be returned 
-   * for positive quantity of trade.  
+   * for positive quantity of trade.
    * 
    * @param trade  the trade
    * @param ratesProvider  the rates provider, used to determine price index values
@@ -577,9 +581,9 @@ public class DiscountingCapitalIndexedBondTradePricer {
       ResolvedCapitalIndexedBondTrade trade,
       RatesProvider ratesProvider) {
 
-    PaymentPeriod settlement = trade.getSettlement();
-    if (settlement instanceof KnownAmountPaymentPeriod) {
-      Payment payment = ((KnownAmountPaymentPeriod) settlement).getPayment();
+    BondPaymentPeriod settlement = trade.getSettlement();
+    if (settlement instanceof KnownAmountBondPaymentPeriod) {
+      Payment payment = ((KnownAmountBondPaymentPeriod) settlement).getPayment();
       return payment.getValue();
     } else if (settlement instanceof CapitalIndexedBondPaymentPeriod) {
       CapitalIndexedBondPaymentPeriod casted = (CapitalIndexedBondPaymentPeriod) settlement;
@@ -595,7 +599,7 @@ public class DiscountingCapitalIndexedBondTradePricer {
       RatesProvider ratesProvider,
       LegalEntityDiscountingProvider issuerDiscountFactorsProvider) {
 
-    PaymentPeriod settlement = trade.getSettlement();
+    BondPaymentPeriod settlement = trade.getSettlement();
     ResolvedCapitalIndexedBond product = trade.getProduct();
     RepoCurveDiscountFactors discountFactors = issuerDiscountFactorsProvider.repoCurveDiscountFactors(
         product.getSecurityId(), product.getLegalEntityId(), product.getCurrency());
@@ -631,8 +635,8 @@ public class DiscountingCapitalIndexedBondTradePricer {
       ResolvedCapitalIndexedBondTrade trade,
       RatesProvider ratesProvider) {
 
-    PaymentPeriod settlement = trade.getSettlement();
-    if (settlement instanceof KnownAmountPaymentPeriod) {
+    BondPaymentPeriod settlement = trade.getSettlement();
+    if (settlement instanceof KnownAmountBondPaymentPeriod) {
       return PointSensitivityBuilder.none();
     } else if (settlement instanceof CapitalIndexedBondPaymentPeriod) {
       CapitalIndexedBondPaymentPeriod casted = (CapitalIndexedBondPaymentPeriod) settlement;
@@ -646,7 +650,7 @@ public class DiscountingCapitalIndexedBondTradePricer {
       RatesProvider ratesProvider,
       LegalEntityDiscountingProvider issuerDiscountFactorsProvider) {
 
-    PaymentPeriod settlement = trade.getSettlement();
+    BondPaymentPeriod settlement = trade.getSettlement();
     ResolvedCapitalIndexedBond product = trade.getProduct();
     RepoCurveDiscountFactors discountFactors = issuerDiscountFactorsProvider.repoCurveDiscountFactors(
         product.getSecurityId(), product.getLegalEntityId(), product.getCurrency());

@@ -42,6 +42,10 @@ import com.opengamma.strata.product.swap.InflationRateCalculation;
  * A security representing a capital indexed bond.
  * <p>
  * A capital indexed bond is a financial instrument that represents a stream of inflation-adjusted payments.
+ * 
+ * <h4>Price</h4>
+ * Strata uses <i>decimal prices</i> for bonds in the trade model, pricers and market data.
+ * For example, a price of 99.32% is represented in Strata by 0.9932.
  */
 @BeanDefinition
 public final class CapitalIndexedBondSecurity
@@ -118,7 +122,7 @@ public final class CapitalIndexedBondSecurity
   @PropertyDefinition(validate = "notNull")
   private final DaysAdjustment settlementDateOffset;
   /**
-   * Ex-coupon period. 
+   * Ex-coupon period.
    * <p>
    * Some bonds trade ex-coupons before the coupon payment. The coupon is paid not to the
    * owner of the bond on the payment date but to the owner of the bond on the detachment date.

@@ -19,7 +19,6 @@ import com.google.common.collect.ImmutableMap;
 import com.opengamma.strata.basics.StandardId;
 import com.opengamma.strata.basics.currency.Currency;
 import com.opengamma.strata.basics.currency.FxMatrix;
-import com.opengamma.strata.basics.index.PriceIndex;
 import com.opengamma.strata.collect.array.DoubleArray;
 import com.opengamma.strata.collect.timeseries.LocalDateDoubleTimeSeries;
 import com.opengamma.strata.collect.timeseries.LocalDateDoubleTimeSeriesBuilder;
@@ -28,16 +27,14 @@ import com.opengamma.strata.market.curve.CurveMetadata;
 import com.opengamma.strata.market.curve.CurveName;
 import com.opengamma.strata.market.curve.Curves;
 import com.opengamma.strata.market.curve.InterpolatedNodalCurve;
-import com.opengamma.strata.market.interpolator.CurveInterpolator;
-import com.opengamma.strata.market.interpolator.CurveInterpolators;
+import com.opengamma.strata.market.curve.interpolator.CurveInterpolator;
+import com.opengamma.strata.market.curve.interpolator.CurveInterpolators;
 import com.opengamma.strata.pricer.DiscountFactors;
 import com.opengamma.strata.pricer.ZeroRateDiscountFactors;
 import com.opengamma.strata.pricer.rate.ImmutableRatesProvider;
-import com.opengamma.strata.pricer.rate.PriceIndexValues;
-import com.opengamma.strata.pricer.rate.SimplePriceIndexValues;
 
 /**
- * The data set for testing capital indexed bonds. 
+ * The data set for testing capital indexed bonds.
  */
 public class CapitalIndexedBondCurveDataSet {
 
@@ -94,64 +91,58 @@ public class CapitalIndexedBondCurveDataSet {
   }
 
   /**
-   * Obtains an immutable rates providers with valuation date and time series. 
+   * Obtains an immutable rates providers with valuation date and time series.
    * <p>
-   * The time series must contain historical data for the price index. 
+   * The time series must contain historical data for the price index.
    * 
    * @param valuationDate  the valuation date
    * @param timeSeries  the time series
    * @return the rates provider
    */
   public static ImmutableRatesProvider getRatesProvider(LocalDate valuationDate, LocalDateDoubleTimeSeries timeSeries) {
-    PriceIndexValues indexCurve = SimplePriceIndexValues.of(US_CPI_U, valuationDate, CPI_CURVE, timeSeries);
-    ImmutableMap<PriceIndex, PriceIndexValues> map = ImmutableMap.of(US_CPI_U, indexCurve);
     return ImmutableRatesProvider.builder(valuationDate)
         .fxRateProvider(FxMatrix.empty())
-        .priceIndexValues(map)
+        .priceIndexCurve(US_CPI_U, CPI_CURVE)
         .timeSeries(US_CPI_U, timeSeries)
         .build();
   }
 
   /**
-   * Obtains an immutable rates providers with valuation date and time series. 
+   * Obtains an immutable rates providers with valuation date and time series.
    * <p>
-   * The time series must contain historical data for the price index. 
+   * The time series must contain historical data for the price index.
    * 
    * @param valuationDate  the valuation date
    * @param timeSeries  the time series
    * @return the rates provider
    */
   public static ImmutableRatesProvider getRatesProviderGb(LocalDate valuationDate, LocalDateDoubleTimeSeries timeSeries) {
-    PriceIndexValues indexCurve = SimplePriceIndexValues.of(GB_RPI, valuationDate, RPI_CURVE, timeSeries);
-    ImmutableMap<PriceIndex, PriceIndexValues> map = ImmutableMap.of(GB_RPI, indexCurve);
     return ImmutableRatesProvider.builder(valuationDate)
         .fxRateProvider(FxMatrix.empty())
-        .priceIndexValues(map)
+        .priceIndexCurve(GB_RPI, RPI_CURVE)
         .timeSeries(GB_RPI, timeSeries)
         .build();
   }
 
   /**
-   * Obtains an immutable rates providers with valuation date and time series. 
+   * Obtains an immutable rates providers with valuation date and time series.
    * <p>
-   * The time series must contain historical data for the price index. 
+   * The time series must contain historical data for the price index.
    * 
    * @param valuationDate  the valuation date
    * @param timeSeries  the time series
    * @return the rates provider
    */
   public static ImmutableRatesProvider getRatesProviderJp(LocalDate valuationDate, LocalDateDoubleTimeSeries timeSeries) {
-    PriceIndexValues indexCurve = SimplePriceIndexValues.of(JP_CPI_EXF, valuationDate, CPIJ_CURVE, timeSeries);
-    ImmutableMap<PriceIndex, PriceIndexValues> map = ImmutableMap.of(JP_CPI_EXF, indexCurve);
     return ImmutableRatesProvider.builder(valuationDate)
         .fxRateProvider(FxMatrix.empty())
-        .priceIndexValues(map)
+        .priceIndexCurve(JP_CPI_EXF, CPIJ_CURVE)
         .timeSeries(JP_CPI_EXF, timeSeries)
         .build();
   }
 
   /**
-   * Obtains legal entity discounting rates provider from valuation date. 
+   * Obtains legal entity discounting rates provider from valuation date.
    * 
    * @param valuationDate  the valuation date
    * @return the discounting rates provider
@@ -170,7 +161,7 @@ public class CapitalIndexedBondCurveDataSet {
   }
 
   /**
-   * Obtains legal entity discounting rates provider from valuation date. 
+   * Obtains legal entity discounting rates provider from valuation date.
    * 
    * @param valuationDate  the valuation date
    * @return the discounting rates provider
@@ -189,7 +180,7 @@ public class CapitalIndexedBondCurveDataSet {
   }
 
   /**
-   * Obtains legal entity discounting rates provider from valuation date. 
+   * Obtains legal entity discounting rates provider from valuation date.
    * 
    * @param valuationDate  the valuation date
    * @return the discounting rates provider
@@ -208,7 +199,7 @@ public class CapitalIndexedBondCurveDataSet {
   }
 
   /**
-   * Obtains issuer curve discount factors form valuation date. 
+   * Obtains issuer curve discount factors form valuation date.
    * 
    * @param valuationDate  the valuation date
    * @return the discount factors
@@ -228,7 +219,7 @@ public class CapitalIndexedBondCurveDataSet {
   }
 
   /**
-   * Obtains time series of price index up to valuation date. 
+   * Obtains time series of price index up to valuation date.
    * 
    * @param valuationDate  the valuation date
    * @return the time series
@@ -290,7 +281,7 @@ public class CapitalIndexedBondCurveDataSet {
   }
 
   /**
-   * Obtains time series of price index up to valuation date. 
+   * Obtains time series of price index up to valuation date.
    * 
    * @param valuationDate  the valuation date
    * @return the time series
@@ -314,7 +305,7 @@ public class CapitalIndexedBondCurveDataSet {
   }
 
   /**
-   * Obtains time series of price index up to valuation date. 
+   * Obtains time series of price index up to valuation date.
    * 
    * @param valuationDate  the valuation date
    * @return the time series

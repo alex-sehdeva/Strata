@@ -5,8 +5,9 @@
  */
 package com.opengamma.strata.pricer.swaption;
 
-import static com.opengamma.strata.basics.date.DayCounts.ACT_365F;
+import static com.opengamma.strata.market.curve.interpolator.CurveInterpolators.LINEAR;
 import static com.opengamma.strata.pricer.swaption.SwaptionCubeData.DATA_ARRAY_SPARSE;
+import static com.opengamma.strata.pricer.swaption.SwaptionCubeData.DAY_COUNT;
 import static com.opengamma.strata.pricer.swaption.SwaptionCubeData.EXPIRIES;
 import static com.opengamma.strata.pricer.swaption.SwaptionCubeData.MONEYNESS;
 import static com.opengamma.strata.pricer.swaption.SwaptionCubeData.TENORS;
@@ -17,36 +18,30 @@ import java.time.LocalDate;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.temporal.ChronoUnit;
-import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import org.testng.annotations.Test;
 
 import com.google.common.collect.ImmutableList;
 import com.opengamma.strata.basics.ReferenceData;
-import com.opengamma.strata.basics.index.Index;
 import com.opengamma.strata.collect.io.ResourceLocator;
-import com.opengamma.strata.collect.timeseries.LocalDateDoubleTimeSeries;
 import com.opengamma.strata.data.ImmutableMarketData;
 import com.opengamma.strata.loader.csv.QuotesCsvLoader;
 import com.opengamma.strata.loader.csv.RatesCalibrationCsvLoader;
 import com.opengamma.strata.market.ValueType;
 import com.opengamma.strata.market.curve.CurveGroupDefinition;
-import com.opengamma.strata.market.interpolator.CurveExtrapolators;
-import com.opengamma.strata.market.interpolator.CurveInterpolators;
+import com.opengamma.strata.market.curve.CurveGroupName;
 import com.opengamma.strata.market.observable.QuoteId;
 import com.opengamma.strata.market.surface.ConstantSurface;
 import com.opengamma.strata.market.surface.DefaultSurfaceMetadata;
 import com.opengamma.strata.market.surface.Surface;
-import com.opengamma.strata.math.impl.interpolation.CombinedInterpolatorExtrapolator;
-import com.opengamma.strata.math.impl.interpolation.GridInterpolator2D;
-import com.opengamma.strata.math.impl.interpolation.Interpolator1D;
+import com.opengamma.strata.market.surface.interpolator.GridSurfaceInterpolator;
+import com.opengamma.strata.market.surface.interpolator.SurfaceInterpolator;
 import com.opengamma.strata.pricer.curve.CalibrationMeasures;
 import com.opengamma.strata.pricer.curve.CurveCalibrator;
-import com.opengamma.strata.pricer.curve.RawOptionData;
 import com.opengamma.strata.pricer.impl.option.BlackFormulaRepository;
 import com.opengamma.strata.pricer.impl.option.NormalFormulaRepository;
+import com.opengamma.strata.pricer.option.TenorRawOptionData;
 import com.opengamma.strata.pricer.rate.RatesProvider;
 import com.opengamma.strata.pricer.swap.DiscountingSwapProductPricer;
 import com.opengamma.strata.product.common.BuySell;
@@ -71,27 +66,26 @@ public class SabrSwaptionCalibratorCubeNormalTest {
   private static final String SETTINGS_FILE = "curve-config/EUR-DSCONOIS-E3BS-E6IRS-settings.csv";
   private static final String NODES_FILE = "curve-config/EUR-DSCONOIS-E3BS-E6IRS-nodes.csv";
   private static final String QUOTES_FILE = "quotes/quotes-20160229-eur.csv";
-  private static final Map<Index, LocalDateDoubleTimeSeries> TS = new HashMap<>();
   private static final CurveGroupDefinition CONFIGS =
       RatesCalibrationCsvLoader.load(
           ResourceLocator.of(BASE_DIR + GROUPS_FILE),
           ResourceLocator.of(BASE_DIR + SETTINGS_FILE),
-          ResourceLocator.of(BASE_DIR + NODES_FILE)).get(0);
+          ResourceLocator.of(BASE_DIR + NODES_FILE)).get(CurveGroupName.of("EUR-DSCONOIS-E3BS-E6IRS"));
   private static final Map<QuoteId, Double> MAP_MQ =
       QuotesCsvLoader.load(CALIBRATION_DATE, ImmutableList.of(ResourceLocator.of(BASE_DIR + QUOTES_FILE)));
   private static final ImmutableMarketData MARKET_QUOTES = ImmutableMarketData.of(CALIBRATION_DATE, MAP_MQ);
 
   private static final CalibrationMeasures CALIBRATION_MEASURES = CalibrationMeasures.PAR_SPREAD;
   private static final CurveCalibrator CALIBRATOR = CurveCalibrator.of(1e-9, 1e-9, 100, CALIBRATION_MEASURES);
-  private static final RatesProvider MULTICURVE =
-      CALIBRATOR.calibrate(CONFIGS, MARKET_QUOTES, REF_DATA, TS);
+  private static final RatesProvider MULTICURVE = CALIBRATOR.calibrate(CONFIGS, MARKET_QUOTES, REF_DATA);
 
   private static final DiscountingSwapProductPricer SWAP_PRICER = DiscountingSwapProductPricer.DEFAULT;
-  private static final List<RawOptionData> DATA_SPARSE = SabrSwaptionCalibratorSmileTestUtils
-      .rawData(ValueType.SIMPLE_MONEYNESS, MONEYNESS, EXPIRIES, ValueType.NORMAL_VOLATILITY, DATA_ARRAY_SPARSE);
-  private static final Interpolator1D LINEAR_FLAT = CombinedInterpolatorExtrapolator.of(
-      CurveInterpolators.LINEAR.getName(), CurveExtrapolators.FLAT.getName(), CurveExtrapolators.FLAT.getName());
-  private static final GridInterpolator2D INTERPOLATOR_2D = new GridInterpolator2D(LINEAR_FLAT, LINEAR_FLAT);
+  private static final TenorRawOptionData DATA_SPARSE = SabrSwaptionCalibratorSmileTestUtils
+      .rawData(TENORS, EXPIRIES, ValueType.SIMPLE_MONEYNESS, MONEYNESS, ValueType.NORMAL_VOLATILITY, DATA_ARRAY_SPARSE);
+  private static final SurfaceInterpolator INTERPOLATOR_2D = GridSurfaceInterpolator.of(LINEAR, LINEAR);
+  private static final SwaptionVolatilitiesName NAME_SABR = SwaptionVolatilitiesName.of("Calibrated-SABR");
+  private static final SabrSwaptionDefinition DEFINITION =
+      SabrSwaptionDefinition.of(NAME_SABR, EUR_FIXED_1Y_EURIBOR_6M, DAY_COUNT, INTERPOLATOR_2D);
 
   private static final double TOLERANCE_PRICE_CALIBRATION_LS = 5.0E-4; // Calibration Least Square; result not exact
 
@@ -107,16 +101,7 @@ public class SabrSwaptionCalibratorCubeNormalTest {
         .withMetadata(DefaultSurfaceMetadata.builder()
             .xValueType(ValueType.YEAR_FRACTION).yValueType(ValueType.YEAR_FRACTION).surfaceName("Shift").build());
     SabrParametersSwaptionVolatilities calibrated = SABR_CALIBRATION.calibrateWithFixedBetaAndShift(
-        SwaptionVolatilitiesName.of("Calibrated-SABR"),
-        EUR_FIXED_1Y_EURIBOR_6M,
-        CALIBRATION_TIME,
-        ACT_365F,
-        TENORS,
-        DATA_SPARSE,
-        MULTICURVE,
-        betaSurface,
-        shiftSurface,
-        INTERPOLATOR_2D);
+        DEFINITION, CALIBRATION_TIME, DATA_SPARSE, MULTICURVE, betaSurface, shiftSurface);
 
     for (int looptenor = 0; looptenor < TENORS.size(); looptenor++) {
       double tenor = TENORS.get(looptenor).get(ChronoUnit.YEARS);

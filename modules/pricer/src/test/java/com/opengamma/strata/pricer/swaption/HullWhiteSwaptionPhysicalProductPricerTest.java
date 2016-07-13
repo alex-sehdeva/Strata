@@ -47,26 +47,26 @@ import com.opengamma.strata.math.impl.statistics.distribution.NormalDistribution
 import com.opengamma.strata.math.impl.statistics.distribution.ProbabilityDistribution;
 import com.opengamma.strata.pricer.impl.rate.swap.CashFlowEquivalentCalculator;
 import com.opengamma.strata.pricer.index.HullWhiteIborFutureDataSet;
-import com.opengamma.strata.pricer.index.HullWhiteOneFactorPiecewiseConstantParameters;
-import com.opengamma.strata.pricer.index.HullWhiteOneFactorPiecewiseConstantParametersProvider;
+import com.opengamma.strata.pricer.model.HullWhiteOneFactorPiecewiseConstantParameters;
+import com.opengamma.strata.pricer.model.HullWhiteOneFactorPiecewiseConstantParametersProvider;
 import com.opengamma.strata.pricer.rate.ImmutableRatesProvider;
 import com.opengamma.strata.pricer.sensitivity.RatesFiniteDifferenceSensitivityCalculator;
 import com.opengamma.strata.pricer.swap.DiscountingSwapProductPricer;
-import com.opengamma.strata.pricer.swap.PaymentEventPricer;
+import com.opengamma.strata.pricer.swap.SwapPaymentEventPricer;
 import com.opengamma.strata.product.common.LongShort;
 import com.opengamma.strata.product.swap.FixedRateCalculation;
 import com.opengamma.strata.product.swap.IborRateCalculation;
 import com.opengamma.strata.product.swap.NotionalSchedule;
-import com.opengamma.strata.product.swap.PaymentEvent;
+import com.opengamma.strata.product.swap.SwapPaymentEvent;
 import com.opengamma.strata.product.swap.PaymentSchedule;
 import com.opengamma.strata.product.swap.RateCalculationSwapLeg;
 import com.opengamma.strata.product.swap.ResolvedSwap;
 import com.opengamma.strata.product.swap.ResolvedSwapLeg;
 import com.opengamma.strata.product.swap.Swap;
 import com.opengamma.strata.product.swap.SwapLeg;
-import com.opengamma.strata.product.swaption.CashSettlement;
-import com.opengamma.strata.product.swaption.CashSettlementMethod;
-import com.opengamma.strata.product.swaption.PhysicalSettlement;
+import com.opengamma.strata.product.swaption.CashSwaptionSettlement;
+import com.opengamma.strata.product.swaption.CashSwaptionSettlementMethod;
+import com.opengamma.strata.product.swaption.PhysicalSwaptionSettlement;
 import com.opengamma.strata.product.swaption.ResolvedSwaption;
 import com.opengamma.strata.product.swaption.Swaption;
 
@@ -150,16 +150,14 @@ public class HullWhiteSwaptionPhysicalProductPricerTest {
   private static final ResolvedSwap RSWAP_REC = SWAP_REC.resolve(REF_DATA);
   private static final Swap SWAP_PAY = Swap.of(FIXED_LEG_PAY, IBOR_LEG_REC);
   private static final ResolvedSwap RSWAP_PAY = SWAP_PAY.resolve(REF_DATA);
-  private static final CashSettlement PAR_YIELD = CashSettlement.builder()
-      .cashSettlementMethod(CashSettlementMethod.PAR_YIELD)
-      .settlementDate(SETTLE)
-      .build();
+  private static final CashSwaptionSettlement PAR_YIELD =
+      CashSwaptionSettlement.of(SETTLE, CashSwaptionSettlementMethod.PAR_YIELD);
   private static final ResolvedSwaption SWAPTION_REC_LONG = Swaption
       .builder()
       .expiryDate(AdjustableDate.of(MATURITY.toLocalDate(), BDA_MF))
       .expiryTime(MATURITY.toLocalTime())
       .expiryZone(MATURITY.getZone())
-      .swaptionSettlement(PhysicalSettlement.DEFAULT)
+      .swaptionSettlement(PhysicalSwaptionSettlement.DEFAULT)
       .longShort(LONG)
       .underlying(SWAP_REC)
       .build().
@@ -169,7 +167,7 @@ public class HullWhiteSwaptionPhysicalProductPricerTest {
       .expiryDate(AdjustableDate.of(MATURITY.toLocalDate(), BDA_MF))
       .expiryTime(MATURITY.toLocalTime())
       .expiryZone(MATURITY.getZone())
-      .swaptionSettlement(PhysicalSettlement.DEFAULT)
+      .swaptionSettlement(PhysicalSwaptionSettlement.DEFAULT)
       .longShort(SHORT)
       .underlying(SWAP_REC)
       .build().
@@ -179,7 +177,7 @@ public class HullWhiteSwaptionPhysicalProductPricerTest {
       .expiryDate(AdjustableDate.of(MATURITY.toLocalDate(), BDA_MF))
       .expiryTime(MATURITY.toLocalTime())
       .expiryZone(MATURITY.getZone())
-      .swaptionSettlement(PhysicalSettlement.DEFAULT)
+      .swaptionSettlement(PhysicalSwaptionSettlement.DEFAULT)
       .longShort(LONG)
       .underlying(SWAP_PAY)
       .build().
@@ -189,7 +187,7 @@ public class HullWhiteSwaptionPhysicalProductPricerTest {
       .expiryDate(AdjustableDate.of(MATURITY.toLocalDate(), BDA_MF))
       .expiryTime(MATURITY.toLocalTime())
       .expiryZone(MATURITY.getZone())
-      .swaptionSettlement(PhysicalSettlement.DEFAULT)
+      .swaptionSettlement(PhysicalSwaptionSettlement.DEFAULT)
       .longShort(SHORT)
       .underlying(SWAP_PAY)
       .build().
@@ -234,14 +232,14 @@ public class HullWhiteSwaptionPhysicalProductPricerTest {
   public void test_presentValue() {
     CurrencyAmount computedRec = PRICER.presentValue(SWAPTION_REC_LONG, RATE_PROVIDER, HW_PROVIDER);
     CurrencyAmount computedPay = PRICER.presentValue(SWAPTION_PAY_SHORT, RATE_PROVIDER, HW_PROVIDER);
-    PaymentEventPricer<PaymentEvent> paymentEventPricer = PaymentEventPricer.standard();
+    SwapPaymentEventPricer<SwapPaymentEvent> paymentEventPricer = SwapPaymentEventPricer.standard();
     ResolvedSwapLeg cashFlowEquiv = CashFlowEquivalentCalculator.cashFlowEquivalentSwap(RSWAP_REC, RATE_PROVIDER);
     LocalDate expiryDate = MATURITY.toLocalDate();
     int nPayments = cashFlowEquiv.getPaymentEvents().size();
     double[] alpha = new double[nPayments];
     double[] discountedCashFlow = new double[nPayments];
     for (int loopcf = 0; loopcf < nPayments; loopcf++) {
-      PaymentEvent payment = cashFlowEquiv.getPaymentEvents().get(loopcf);
+      SwapPaymentEvent payment = cashFlowEquiv.getPaymentEvents().get(loopcf);
       alpha[loopcf] = HW_PROVIDER.alpha(RATE_PROVIDER.getValuationDate(), expiryDate, expiryDate, payment.getPaymentDate());
       discountedCashFlow[loopcf] = paymentEventPricer.presentValue(payment, RATE_PROVIDER);
     }

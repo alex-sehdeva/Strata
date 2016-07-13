@@ -10,8 +10,9 @@ import com.opengamma.strata.basics.currency.CurrencyAmount;
 import com.opengamma.strata.basics.currency.MultiCurrencyAmount;
 import com.opengamma.strata.collect.ArgChecker;
 import com.opengamma.strata.data.FieldName;
-import com.opengamma.strata.data.scenario.CurrencyValuesArray;
-import com.opengamma.strata.data.scenario.MultiCurrencyValuesArray;
+import com.opengamma.strata.data.scenario.CurrencyScenarioArray;
+import com.opengamma.strata.data.scenario.DoubleScenarioArray;
+import com.opengamma.strata.data.scenario.MultiCurrencyScenarioArray;
 import com.opengamma.strata.data.scenario.ScenarioArray;
 import com.opengamma.strata.market.observable.QuoteId;
 import com.opengamma.strata.market.param.CurrencyParameterSensitivities;
@@ -60,11 +61,11 @@ final class DsfMeasureCalculations {
 
   //-------------------------------------------------------------------------
   // calculates present value for all scenarios
-  CurrencyValuesArray presentValue(
+  CurrencyScenarioArray presentValue(
       ResolvedDsfTrade trade,
       RatesScenarioMarketData marketData) {
 
-    return CurrencyValuesArray.of(
+    return CurrencyScenarioArray.of(
         marketData.getScenarioCount(),
         i -> presentValue(trade, marketData.scenario(i).ratesProvider()));
   }
@@ -80,11 +81,11 @@ final class DsfMeasureCalculations {
 
   //-------------------------------------------------------------------------
   // calculates calibrated sum PV01 for all scenarios
-  MultiCurrencyValuesArray pv01CalibratedSum(
+  MultiCurrencyScenarioArray pv01CalibratedSum(
       ResolvedDsfTrade trade,
       RatesScenarioMarketData marketData) {
 
-    return MultiCurrencyValuesArray.of(
+    return MultiCurrencyScenarioArray.of(
         marketData.getScenarioCount(),
         i -> pv01CalibratedSum(trade, marketData.scenario(i).ratesProvider()));
   }
@@ -120,11 +121,11 @@ final class DsfMeasureCalculations {
 
   //-------------------------------------------------------------------------
   // calculates market quote sum PV01 for all scenarios
-  MultiCurrencyValuesArray pv01MarketQuoteSum(
+  MultiCurrencyScenarioArray pv01MarketQuoteSum(
       ResolvedDsfTrade trade,
       RatesScenarioMarketData marketData) {
 
-    return MultiCurrencyValuesArray.of(
+    return MultiCurrencyScenarioArray.of(
         marketData.getScenarioCount(),
         i -> pv01MarketQuoteSum(trade, marketData.scenario(i).ratesProvider()));
   }
@@ -161,12 +162,32 @@ final class DsfMeasureCalculations {
   }
 
   //-------------------------------------------------------------------------
-  // calculates currency exposure for all scenarios
-  MultiCurrencyValuesArray currencyExposure(
+  // calculates unit price for all scenarios
+  DoubleScenarioArray unitPrice(
       ResolvedDsfTrade trade,
       RatesScenarioMarketData marketData) {
 
-    return MultiCurrencyValuesArray.of(
+    return DoubleScenarioArray.of(
+        marketData.getScenarioCount(),
+        i -> unitPrice(trade, marketData.scenario(i).ratesProvider()));
+  }
+
+  // unit price for one scenario
+  double unitPrice(
+      ResolvedDsfTrade trade,
+      RatesProvider ratesProvider) {
+
+    // mark to model
+    return tradePricer.price(trade, ratesProvider);
+  }
+
+  //-------------------------------------------------------------------------
+  // calculates currency exposure for all scenarios
+  MultiCurrencyScenarioArray currencyExposure(
+      ResolvedDsfTrade trade,
+      RatesScenarioMarketData marketData) {
+
+    return MultiCurrencyScenarioArray.of(
         marketData.getScenarioCount(),
         i -> currencyExposure(trade, marketData.scenario(i).ratesProvider()));
   }
@@ -185,7 +206,10 @@ final class DsfMeasureCalculations {
   private double settlementPrice(ResolvedDsfTrade trade, RatesProvider ratesProvider) {
     StandardId standardId = trade.getProduct().getSecurityId().getStandardId();
     QuoteId id = QuoteId.of(standardId, FieldName.SETTLEMENT_PRICE);
-    return ratesProvider.data(id) / 100;  // convert market quote to value needed
+    double price = ratesProvider.data(id);
+    ArgChecker.isTrue(
+        price < 10, "Price must be in decimal form, such as 1.007 for a 0.7% present value, but was: {}", price);
+    return price;
   }
 
 }

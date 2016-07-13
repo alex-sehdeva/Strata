@@ -9,15 +9,28 @@ import com.opengamma.strata.collect.ArgChecker;
 import com.opengamma.strata.market.sensitivity.PointSensitivities;
 import com.opengamma.strata.pricer.impl.option.NormalFormulaRepository;
 import com.opengamma.strata.pricer.rate.RatesProvider;
-import com.opengamma.strata.product.common.FutureOptionPremiumStyle;
 import com.opengamma.strata.product.index.IborFutureOption;
 import com.opengamma.strata.product.index.ResolvedIborFuture;
 import com.opengamma.strata.product.index.ResolvedIborFutureOption;
+import com.opengamma.strata.product.option.FutureOptionPremiumStyle;
 
 /**
  * Pricer of options on Ibor future with a normal model on the underlying future price.
+ * <p>
+ * This provides the ability to price an Ibor future option.
+ * The option must be based on {@linkplain FutureOptionPremiumStyle#DAILY_MARGIN daily margin}.
+ * 
+ * <h4>Price</h4>
+ * The price of an Ibor future option is based on the price of the underlying future, the volatility
+ * and the time to expiry. The price of the at-the-money option tends to zero as expiry approaches.
+ * <p>
+ * Strata uses <i>decimal prices</i> for Ibor future options in the trade model, pricers and market data.
+ * The decimal price is based on the decimal rate equivalent to the percentage.
+ * For example, an option price of 0.2 is related to a futures price of 99.32 that implies an
+ * interest rate of 0.68%. Strata represents the price of the future as 0.9932 and thus
+ * represents the price of the option as 0.002.
  */
-public class NormalIborFutureOptionMarginedProductPricer extends IborFutureOptionMarginedProductPricer {
+public class NormalIborFutureOptionMarginedProductPricer {
 
   /**
    * Default implementation.
@@ -53,6 +66,43 @@ public class NormalIborFutureOptionMarginedProductPricer extends IborFutureOptio
 
   //-------------------------------------------------------------------------
   /**
+   * Calculates the number related to Ibor futures product on which the daily margin is computed.
+   * <p>
+   * For two consecutive settlement prices C1 and C2, the daily margin is computed as 
+   *    {@code marginIndex(future, C2) - marginIndex(future, C1)}.
+   *    
+   * @param option  the option product
+   * @param price  the price of the product, in decimal form
+   * @return the index
+   */
+  double marginIndex(ResolvedIborFutureOption option, double price) {
+    double notional = option.getUnderlyingFuture().getNotional();
+    double accrualFactor = option.getUnderlyingFuture().getAccrualFactor();
+    return price * notional * accrualFactor;
+  }
+
+  /**
+   * Calculates the margin index sensitivity of the Ibor future product.
+   * <p>
+   * The margin index sensitivity if the sensitivity of the margin index to the underlying curves.
+   * For two consecutive settlement prices C1 and C2, the daily margin is computed as 
+   *    {@code marginIndex(future, C2) - marginIndex(future, C1)}.
+   * 
+   * @param option  the option product
+   * @param priceSensitivity  the price sensitivity of the product
+   * @return the index sensitivity
+   */
+  PointSensitivities marginIndexSensitivity(
+      ResolvedIborFutureOption option,
+      PointSensitivities priceSensitivity) {
+
+    double notional = option.getUnderlyingFuture().getNotional();
+    double accrualFactor = option.getUnderlyingFuture().getAccrualFactor();
+    return priceSensitivity.multipliedBy(notional * accrualFactor);
+  }
+
+  //-------------------------------------------------------------------------
+  /**
    * Calculates the price of the Ibor future option product.
    * <p>
    * The price of the option is the price on the valuation date.
@@ -61,16 +111,16 @@ public class NormalIborFutureOptionMarginedProductPricer extends IborFutureOptio
    * 
    * @param futureOption  the option product
    * @param ratesProvider  the rates provider
-   * @param volatilityProvider  the provider of normal volatility
+   * @param volatilities  the volatilities
    * @return the price of the product, in decimal form
    */
   public double price(
       ResolvedIborFutureOption futureOption,
       RatesProvider ratesProvider,
-      NormalVolatilityIborFutureProvider volatilityProvider) {
+      NormalIborFutureOptionVolatilities volatilities) {
 
     double futurePrice = futurePrice(futureOption, ratesProvider);
-    return price(futureOption, ratesProvider, volatilityProvider, futurePrice);
+    return price(futureOption, ratesProvider, volatilities, futurePrice);
   }
 
   /**
@@ -81,39 +131,27 @@ public class NormalIborFutureOptionMarginedProductPricer extends IborFutureOptio
    * 
    * @param futureOption  the option product
    * @param ratesProvider  the rates provider
-   * @param volatilityProvider  the provider of normal volatility
-   * @param futurePrice  the price of the underlying future
+   * @param volatilities  the volatilities
+   * @param futurePrice  the price of the underlying future, in decimal form
    * @return the price of the product, in decimal form
    */
   public double price(
       ResolvedIborFutureOption futureOption,
       RatesProvider ratesProvider,
-      NormalVolatilityIborFutureProvider volatilityProvider,
+      NormalIborFutureOptionVolatilities volatilities,
       double futurePrice) {
 
     ArgChecker.isTrue(futureOption.getPremiumStyle().equals(FutureOptionPremiumStyle.DAILY_MARGIN),
         "Premium style should be DAILY_MARGIN");
-    ArgChecker.isTrue(futureOption.getUnderlyingFuture().getIndex().equals(volatilityProvider.getFutureIndex()),
+    ArgChecker.isTrue(futureOption.getUnderlyingFuture().getIndex().equals(volatilities.getIndex()),
         "Future index should be the same as data index");
 
-    double timeToExpiry = volatilityProvider.relativeTime(futureOption.getExpiry());
+    double timeToExpiry = volatilities.relativeTime(futureOption.getExpiry());
     double strike = futureOption.getStrikePrice();
     ResolvedIborFuture future = futureOption.getUnderlyingFuture();
-    double volatility = volatilityProvider.volatility(
-        futureOption.getExpiry(), future.getLastTradeDate(), strike, futurePrice);
+    double volatility = volatilities.volatility(timeToExpiry, future.getLastTradeDate(), strike, futurePrice);
 
     return NormalFormulaRepository.price(futurePrice, strike, timeToExpiry, volatility, futureOption.getPutCall());
-  }
-
-  @Override
-  double price(
-      ResolvedIborFutureOption futureOption,
-      RatesProvider ratesProvider,
-      IborFutureProvider volatilityProvider) {
-
-    ArgChecker.isTrue(volatilityProvider instanceof NormalVolatilityIborFutureProvider,
-        "Provider must be of type NormalVolatilityIborFutureProvider");
-    return price(futureOption, ratesProvider, (NormalVolatilityIborFutureProvider) volatilityProvider);
   }
 
   //-------------------------------------------------------------------------
@@ -127,16 +165,16 @@ public class NormalIborFutureOptionMarginedProductPricer extends IborFutureOptio
    * 
    * @param futureOption  the option product
    * @param ratesProvider  the rates provider
-   * @param volatilityProvider  the provider of normal volatility
+   * @param volatilities  the volatilities
    * @return the price curve sensitivity of the product
    */
   public double deltaStickyStrike(
       ResolvedIborFutureOption futureOption,
       RatesProvider ratesProvider,
-      NormalVolatilityIborFutureProvider volatilityProvider) {
+      NormalIborFutureOptionVolatilities volatilities) {
 
     double futurePrice = futurePrice(futureOption, ratesProvider);
-    return deltaStickyStrike(futureOption, ratesProvider, volatilityProvider, futurePrice);
+    return deltaStickyStrike(futureOption, ratesProvider, volatilities, futurePrice);
   }
 
   /**
@@ -148,24 +186,23 @@ public class NormalIborFutureOptionMarginedProductPricer extends IborFutureOptio
    * 
    * @param futureOption  the option product
    * @param ratesProvider  the rates provider
-   * @param volatilityProvider  the provider of normal volatility
-   * @param futurePrice  the price of the underlying future
+   * @param volatilities  the volatilities
+   * @param futurePrice  the price of the underlying future, in decimal form
    * @return the price curve sensitivity of the product
    */
   public double deltaStickyStrike(
       ResolvedIborFutureOption futureOption,
       RatesProvider ratesProvider,
-      NormalVolatilityIborFutureProvider volatilityProvider,
+      NormalIborFutureOptionVolatilities volatilities,
       double futurePrice) {
 
     ArgChecker.isTrue(futureOption.getPremiumStyle().equals(FutureOptionPremiumStyle.DAILY_MARGIN),
         "Premium style should be DAILY_MARGIN");
 
-    double timeToExpiry = volatilityProvider.relativeTime(futureOption.getExpiry());
+    double timeToExpiry = volatilities.relativeTime(futureOption.getExpiry());
     double strike = futureOption.getStrikePrice();
     ResolvedIborFuture future = futureOption.getUnderlyingFuture();
-    double volatility = volatilityProvider.volatility(futureOption.getExpiry(),
-        future.getLastTradeDate(), strike, futurePrice);
+    double volatility = volatilities.volatility(timeToExpiry, future.getLastTradeDate(), strike, futurePrice);
 
     return NormalFormulaRepository.delta(futurePrice, strike, timeToExpiry, volatility, futureOption.getPutCall());
   }
@@ -181,19 +218,19 @@ public class NormalIborFutureOptionMarginedProductPricer extends IborFutureOptio
    * 
    * @param futureOption  the option product
    * @param ratesProvider  the rates provider
-   * @param volatilityProvider  the provider of normal volatility
+   * @param volatilities  the volatilities
    * @return the price curve sensitivity of the product
    */
-  public PointSensitivities priceSensitivityStickyStrike(
+  public PointSensitivities priceSensitivityRatesStickyStrike(
       ResolvedIborFutureOption futureOption,
       RatesProvider ratesProvider,
-      NormalVolatilityIborFutureProvider volatilityProvider) {
+      NormalIborFutureOptionVolatilities volatilities) {
 
     ArgChecker.isTrue(futureOption.getPremiumStyle().equals(FutureOptionPremiumStyle.DAILY_MARGIN),
         "Premium style should be DAILY_MARGIN");
 
     double futurePrice = futurePrice(futureOption, ratesProvider);
-    return priceSensitivityStickyStrike(futureOption, ratesProvider, volatilityProvider, futurePrice);
+    return priceSensitivityRatesStickyStrike(futureOption, ratesProvider, volatilities, futurePrice);
   }
 
   /**
@@ -201,36 +238,24 @@ public class NormalIborFutureOptionMarginedProductPricer extends IborFutureOptio
    * based on the price of the underlying future.
    * <p>
    * The price sensitivity of the product is the sensitivity of the price to the underlying curves.
-   * The volatility is unchanged for a fixed strike in the sensitivity computation, hence the "StickyStrike" name. 
+   * The volatility is unchanged for a fixed strike in the sensitivity computation, hence the "StickyStrike" name.
    * 
    * @param futureOption  the option product
    * @param ratesProvider  the rates provider
-   * @param volatilityProvider  the provider of normal volatility
-   * @param futurePrice  the price of the underlying future
+   * @param volatilities  the volatilities
+   * @param futurePrice  the price of the underlying future, in decimal form
    * @return the price curve sensitivity of the product
    */
-  public PointSensitivities priceSensitivityStickyStrike(
+  public PointSensitivities priceSensitivityRatesStickyStrike(
       ResolvedIborFutureOption futureOption,
       RatesProvider ratesProvider,
-      NormalVolatilityIborFutureProvider volatilityProvider,
+      NormalIborFutureOptionVolatilities volatilities,
       double futurePrice) {
 
-    double delta = deltaStickyStrike(futureOption, ratesProvider, volatilityProvider, futurePrice);
+    double delta = deltaStickyStrike(futureOption, ratesProvider, volatilities, futurePrice);
     PointSensitivities futurePriceSensitivity =
         futurePricer.priceSensitivity(futureOption.getUnderlyingFuture(), ratesProvider);
     return futurePriceSensitivity.multipliedBy(delta);
-  }
-
-  @Override
-  PointSensitivities priceSensitivity(
-      ResolvedIborFutureOption futureOption,
-      RatesProvider ratesProvider,
-      IborFutureProvider volatilityProvider) {
-
-    ArgChecker.isTrue(volatilityProvider instanceof NormalVolatilityIborFutureProvider,
-        "Provider must be of type NormalVolatilityIborFutureProvider");
-    return priceSensitivityStickyStrike(
-        futureOption, ratesProvider, (NormalVolatilityIborFutureProvider) volatilityProvider);
   }
 
   //-------------------------------------------------------------------------
@@ -243,16 +268,16 @@ public class NormalIborFutureOptionMarginedProductPricer extends IborFutureOptio
    * 
    * @param futureOption  the option product
    * @param ratesProvider  the rates provider
-   * @param volatilityProvider  the provider of normal volatility
+   * @param volatilities  the volatilities
    * @return the sensitivity
    */
-  public IborFutureOptionSensitivity priceSensitivityNormalVolatility(
+  public IborFutureOptionSensitivity priceSensitivityModelParamsVolatility(
       ResolvedIborFutureOption futureOption,
       RatesProvider ratesProvider,
-      NormalVolatilityIborFutureProvider volatilityProvider) {
+      NormalIborFutureOptionVolatilities volatilities) {
 
     double futurePrice = futurePrice(futureOption, ratesProvider);
-    return priceSensitivityNormalVolatility(futureOption, ratesProvider, volatilityProvider, futurePrice);
+    return priceSensitivityModelParamsVolatility(futureOption, ratesProvider, volatilities, futurePrice);
   }
 
   /**
@@ -263,28 +288,27 @@ public class NormalIborFutureOptionMarginedProductPricer extends IborFutureOptio
    * 
    * @param futureOption  the option product
    * @param ratesProvider  the rates provider
-   * @param volatilityProvider  the provider of normal volatility
-   * @param futurePrice  the underlying future price
+   * @param volatilities  the volatilities
+   * @param futurePrice  the underlying future price, in decimal form
    * @return the sensitivity
    */
-  public IborFutureOptionSensitivity priceSensitivityNormalVolatility(
+  public IborFutureOptionSensitivity priceSensitivityModelParamsVolatility(
       ResolvedIborFutureOption futureOption,
       RatesProvider ratesProvider,
-      NormalVolatilityIborFutureProvider volatilityProvider,
+      NormalIborFutureOptionVolatilities volatilities,
       double futurePrice) {
 
     ArgChecker.isTrue(futureOption.getPremiumStyle().equals(FutureOptionPremiumStyle.DAILY_MARGIN),
         "Premium style should be DAILY_MARGIN");
 
-    double timeToExpiry = volatilityProvider.relativeTime(futureOption.getExpiry());
+    double timeToExpiry = volatilities.relativeTime(futureOption.getExpiry());
     double strike = futureOption.getStrikePrice();
     ResolvedIborFuture future = futureOption.getUnderlyingFuture();
-    double volatility = volatilityProvider.volatility(futureOption.getExpiry(),
-        future.getLastTradeDate(), strike, futurePrice);
+    double volatility = volatilities.volatility(timeToExpiry, future.getLastTradeDate(), strike, futurePrice);
 
     double vega = NormalFormulaRepository.vega(futurePrice, strike, timeToExpiry, volatility, futureOption.getPutCall());
-    return IborFutureOptionSensitivity.of(future.getIndex(), futureOption.getExpiry(),
-        future.getLastTradeDate(), strike, futurePrice, vega);
+    return IborFutureOptionSensitivity.of(
+        future.getIndex(), timeToExpiry, future.getLastTradeDate(), strike, futurePrice, vega);
   }
 
   //-------------------------------------------------------------------------

@@ -28,6 +28,7 @@ import com.google.common.math.DoubleMath;
 import com.opengamma.strata.basics.ReferenceData;
 import com.opengamma.strata.basics.currency.CurrencyAmount;
 import com.opengamma.strata.basics.currency.MultiCurrencyAmount;
+import com.opengamma.strata.basics.currency.Payment;
 import com.opengamma.strata.market.param.CurrencyParameterSensitivities;
 import com.opengamma.strata.market.sensitivity.PointSensitivityBuilder;
 import com.opengamma.strata.pricer.datasets.RatesProviderDataSets;
@@ -38,6 +39,7 @@ import com.opengamma.strata.pricer.swap.DiscountingSwapProductPricer;
 import com.opengamma.strata.product.rate.FixedRateComputation;
 import com.opengamma.strata.product.rate.IborRateComputation;
 import com.opengamma.strata.product.swap.NotionalExchange;
+import com.opengamma.strata.product.swap.SwapPaymentEvent;
 import com.opengamma.strata.product.swap.RateAccrualPeriod;
 import com.opengamma.strata.product.swap.RatePaymentPeriod;
 import com.opengamma.strata.product.swap.ResolvedSwap;
@@ -147,8 +149,8 @@ public class CashFlowEquivalentCalculatorTest {
     assertEquals(computedIborLeg.getPaymentEvents(), computed.getPaymentEvents().subList(2, 6));
 
     // expected payments from fixed leg
-    NotionalExchange fixedPayment1 = NotionalExchange.of(PAYMENT1, CurrencyAmount.of(GBP, NOTIONAL * RATE * PAY_YC1));
-    NotionalExchange fixedPayment2 = NotionalExchange.of(PAYMENT2, CurrencyAmount.of(GBP, NOTIONAL * RATE * PAY_YC2));
+    NotionalExchange fixedPayment1 = NotionalExchange.of(CurrencyAmount.of(GBP, NOTIONAL * RATE * PAY_YC1), PAYMENT1);
+    NotionalExchange fixedPayment2 = NotionalExchange.of(CurrencyAmount.of(GBP, NOTIONAL * RATE * PAY_YC2), PAYMENT2);
     // expected payments from ibor leg
     LocalDate fixingSTART1 = GBP_LIBOR_3M.calculateEffectiveFromFixing(FIXING1, REF_DATA);
     double fixedYearFraction1 = GBP_LIBOR_3M.getDayCount().relativeYearFraction(fixingSTART1,
@@ -156,18 +158,18 @@ public class CashFlowEquivalentCalculatorTest {
     double beta1 = (1d + fixedYearFraction1 * PROVIDER.iborIndexRates(GBP_LIBOR_3M).rate(GBP_LIBOR_3M_COMP1.getObservation()))
         * PROVIDER.discountFactor(GBP, PAYMENT1) / PROVIDER.discountFactor(GBP, fixingSTART1);
     NotionalExchange iborPayment11 =
-        NotionalExchange.of(fixingSTART1, CurrencyAmount.of(GBP, -NOTIONAL * beta1 * PAY_YC1 / fixedYearFraction1));
+        NotionalExchange.of(CurrencyAmount.of(GBP, -NOTIONAL * beta1 * PAY_YC1 / fixedYearFraction1), fixingSTART1);
     NotionalExchange iborPayment12 =
-        NotionalExchange.of(PAYMENT1, CurrencyAmount.of(GBP, NOTIONAL * PAY_YC1 / fixedYearFraction1));
+        NotionalExchange.of(CurrencyAmount.of(GBP, NOTIONAL * PAY_YC1 / fixedYearFraction1), PAYMENT1);
     LocalDate fixingSTART2 = GBP_LIBOR_3M.calculateEffectiveFromFixing(FIXING2, REF_DATA);
     double fixedYearFraction2 = GBP_LIBOR_3M.getDayCount().relativeYearFraction(fixingSTART2,
         GBP_LIBOR_3M.calculateMaturityFromEffective(fixingSTART2, REF_DATA));
     double beta2 = (1d + fixedYearFraction2 * PROVIDER.iborIndexRates(GBP_LIBOR_3M).rate(GBP_LIBOR_3M_COMP2.getObservation()))
         * PROVIDER.discountFactor(GBP, PAYMENT2) / PROVIDER.discountFactor(GBP, fixingSTART2);
     NotionalExchange iborPayment21 =
-        NotionalExchange.of(fixingSTART2, CurrencyAmount.of(GBP, -NOTIONAL * beta2 * PAY_YC2 / fixedYearFraction2));
+        NotionalExchange.of(CurrencyAmount.of(GBP, -NOTIONAL * beta2 * PAY_YC2 / fixedYearFraction2), fixingSTART2);
     NotionalExchange iborPayment22 =
-        NotionalExchange.of(PAYMENT2, CurrencyAmount.of(GBP, NOTIONAL * PAY_YC2 / fixedYearFraction2));
+        NotionalExchange.of(CurrencyAmount.of(GBP, NOTIONAL * PAY_YC2 / fixedYearFraction2), PAYMENT2);
 
     ResolvedSwapLeg expected = ResolvedSwapLeg
         .builder()
@@ -243,13 +245,13 @@ public class CashFlowEquivalentCalculatorTest {
   //-------------------------------------------------------------------------
   public void test_cashFlowEquivalentAndSensitivity() {
     ResolvedSwap swap = ResolvedSwap.of(IBOR_LEG, FIXED_LEG);
-    ImmutableMap<NotionalExchange, PointSensitivityBuilder> computedFull =
+    ImmutableMap<Payment, PointSensitivityBuilder> computedFull =
         CashFlowEquivalentCalculator.cashFlowEquivalentAndSensitivitySwap(swap, PROVIDER);
-    ImmutableList<NotionalExchange> keyComputedFull = computedFull.keySet().asList();
+    ImmutableList<Payment> keyComputedFull = computedFull.keySet().asList();
     ImmutableList<PointSensitivityBuilder> valueComputedFull = computedFull.values().asList();
-    ImmutableMap<NotionalExchange, PointSensitivityBuilder> computedIborLeg =
+    ImmutableMap<Payment, PointSensitivityBuilder> computedIborLeg =
         CashFlowEquivalentCalculator.cashFlowEquivalentAndSensitivityIborLeg(IBOR_LEG, PROVIDER);
-    ImmutableMap<NotionalExchange, PointSensitivityBuilder> computedFixedLeg =
+    ImmutableMap<Payment, PointSensitivityBuilder> computedFixedLeg =
         CashFlowEquivalentCalculator.cashFlowEquivalentAndSensitivityFixedLeg(FIXED_LEG, PROVIDER);
     assertEquals(computedFixedLeg.keySet().asList(), keyComputedFull.subList(0, 2));
     assertEquals(computedIborLeg.keySet().asList(), keyComputedFull.subList(2, 6));
@@ -264,8 +266,8 @@ public class CashFlowEquivalentCalculatorTest {
       CurrencyParameterSensitivities expected = calc.sensitivity(PROVIDER,
           p -> ((NotionalExchange) CashFlowEquivalentCalculator.cashFlowEquivalentSwap(swap, p)
               .getPaymentEvents().get(index)).getPaymentAmount());
-      PointSensitivityBuilder point = computedFull.get(
-          CashFlowEquivalentCalculator.cashFlowEquivalentSwap(swap, PROVIDER).getPaymentEvents().get(index));
+      SwapPaymentEvent event = CashFlowEquivalentCalculator.cashFlowEquivalentSwap(swap, PROVIDER).getPaymentEvents().get(index);
+      PointSensitivityBuilder point = computedFull.get(((NotionalExchange) event).getPayment());
       CurrencyParameterSensitivities computed = PROVIDER.parameterSensitivity(point.build());
       assertTrue(computed.equalWithTolerance(expected, eps * NOTIONAL));
     }

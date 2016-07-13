@@ -7,8 +7,8 @@ package com.opengamma.strata.measure.swaption;
 
 import com.opengamma.strata.basics.currency.CurrencyAmount;
 import com.opengamma.strata.basics.currency.MultiCurrencyAmount;
-import com.opengamma.strata.data.scenario.CurrencyValuesArray;
-import com.opengamma.strata.data.scenario.MultiCurrencyValuesArray;
+import com.opengamma.strata.data.scenario.CurrencyScenarioArray;
+import com.opengamma.strata.data.scenario.MultiCurrencyScenarioArray;
 import com.opengamma.strata.data.scenario.ScenarioArray;
 import com.opengamma.strata.data.scenario.ScenarioMarketData;
 import com.opengamma.strata.market.param.CurrencyParameterSensitivities;
@@ -21,9 +21,9 @@ import com.opengamma.strata.product.swaption.ResolvedSwaptionTrade;
 import com.opengamma.strata.product.swaption.SwaptionTrade;
 
 /**
- * Calculates pricing and risk measures for forward rate agreement (FRA) trades.
+ * Calculates pricing and risk measures for swaption trades.
  * <p>
- * This provides a high-level entry point for FRA pricing and risk measures.
+ * This provides a high-level entry point for swaption pricing and risk measures.
  * <p>
  * Each method takes a {@link ResolvedSwaptionTrade}, whereas application code will
  * typically work with {@link SwaptionTrade}. Call
@@ -68,7 +68,7 @@ public class SwaptionTradeCalculations {
    * @param marketData  the market data
    * @return the present value, one entry per scenario
    */
-  public CurrencyValuesArray presentValue(
+  public CurrencyScenarioArray presentValue(
       ResolvedSwaptionTrade trade,
       RatesMarketDataLookup ratesLookup,
       SwaptionMarketDataLookup swaptionLookup,
@@ -109,7 +109,7 @@ public class SwaptionTradeCalculations {
    * @param marketData  the market data
    * @return the present value sensitivity, one entry per scenario
    */
-  public MultiCurrencyValuesArray pv01RatesCalibratedSum(
+  public MultiCurrencyScenarioArray pv01RatesCalibratedSum(
       ResolvedSwaptionTrade trade,
       RatesMarketDataLookup ratesLookup,
       SwaptionMarketDataLookup swaptionLookup,
@@ -198,7 +198,7 @@ public class SwaptionTradeCalculations {
    * @param marketData  the market data
    * @return the present value sensitivity, one entry per scenario
    */
-  public MultiCurrencyValuesArray pv01RatesMarketQuoteSum(
+  public MultiCurrencyScenarioArray pv01RatesMarketQuoteSum(
       ResolvedSwaptionTrade trade,
       RatesMarketDataLookup ratesLookup,
       SwaptionMarketDataLookup swaptionLookup,
@@ -288,7 +288,7 @@ public class SwaptionTradeCalculations {
    * @param marketData  the market data
    * @return the currency exposure, one entry per scenario
    */
-  public MultiCurrencyValuesArray currencyExposure(
+  public MultiCurrencyScenarioArray currencyExposure(
       ResolvedSwaptionTrade trade,
       RatesMarketDataLookup ratesLookup,
       SwaptionMarketDataLookup swaptionLookup,
@@ -330,7 +330,7 @@ public class SwaptionTradeCalculations {
    * @param marketData  the market data
    * @return the current cash, one entry per scenario
    */
-  public CurrencyValuesArray currentCash(
+  public CurrencyScenarioArray currentCash(
       ResolvedSwaptionTrade trade,
       RatesMarketDataLookup ratesLookup,
       SwaptionMarketDataLookup swaptionLookup,

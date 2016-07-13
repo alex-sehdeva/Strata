@@ -18,7 +18,6 @@ import com.opengamma.strata.calc.Measure;
 import com.opengamma.strata.calc.runner.CalculationFunction;
 import com.opengamma.strata.calc.runner.CalculationParameters;
 import com.opengamma.strata.calc.runner.FunctionRequirements;
-import com.opengamma.strata.calc.runner.FunctionUtils;
 import com.opengamma.strata.collect.result.FailureReason;
 import com.opengamma.strata.collect.result.Result;
 import com.opengamma.strata.data.FieldName;
@@ -37,16 +36,25 @@ import com.opengamma.strata.product.index.ResolvedIborFutureTrade;
  * Perform calculations on a single {@code IborFutureTrade} for each of a set of scenarios.
  * <p>
  * This uses the standard discounting calculation method.
+ * An instance of {@link RatesMarketDataLookup} must be specified.
  * The supported built-in measures are:
  * <ul>
  *   <li>{@linkplain Measures#PRESENT_VALUE Present value}
- *   <li>{@linkplain Measures#PRESENT_VALUE_MULTI_CCY Present value with no currency conversion}
  *   <li>{@linkplain Measures#PV01_CALIBRATED_SUM PV01 calibrated sum}
  *   <li>{@linkplain Measures#PV01_CALIBRATED_BUCKETED PV01 calibrated bucketed}
  *   <li>{@linkplain Measures#PV01_MARKET_QUOTE_SUM PV01 market quote sum}
  *   <li>{@linkplain Measures#PV01_MARKET_QUOTE_BUCKETED PV01 market quote bucketed}
+ *   <li>{@linkplain Measures#UNIT_PRICE Unit price}
  *   <li>{@linkplain Measures#PAR_SPREAD Par spread}
  * </ul>
+ * 
+ * <h4>Price</h4>
+ * The price of an Ibor future is based on the interest rate of the underlying index.
+ * It is defined as {@code (100 - percentRate)}.
+ * <p>
+ * Strata uses <i>decimal prices</i> for Ibor futures in the trade model, pricers and market data.
+ * The decimal price is based on the decimal rate equivalent to the percentage.
+ * For example, a price of 99.32 implies an interest rate of 0.68% which is represented in Strata by 0.9932.
  */
 public class IborFutureTradeCalculationFunction
     implements CalculationFunction<IborFutureTrade> {
@@ -61,13 +69,11 @@ public class IborFutureTradeCalculationFunction
           .put(Measures.PV01_CALIBRATED_BUCKETED, IborFutureMeasureCalculations.DEFAULT::pv01CalibratedBucketed)
           .put(Measures.PV01_MARKET_QUOTE_SUM, IborFutureMeasureCalculations.DEFAULT::pv01MarketQuoteSum)
           .put(Measures.PV01_MARKET_QUOTE_BUCKETED, IborFutureMeasureCalculations.DEFAULT::pv01MarketQuoteBucketed)
+          .put(Measures.UNIT_PRICE, IborFutureMeasureCalculations.DEFAULT::unitPrice)
           .put(Measures.PAR_SPREAD, IborFutureMeasureCalculations.DEFAULT::parSpread)
           .build();
 
-  private static final ImmutableSet<Measure> MEASURES = ImmutableSet.<Measure>builder()
-      .addAll(CALCULATORS.keySet())
-      .add(Measures.PRESENT_VALUE_MULTI_CCY)
-      .build();
+  private static final ImmutableSet<Measure> MEASURES = CALCULATORS.keySet();
 
   /**
    * Creates an instance.
@@ -136,8 +142,6 @@ public class IborFutureTradeCalculationFunction
     for (Measure measure : measures) {
       results.put(measure, calculate(measure, resolved, marketData));
     }
-    // The calculated value is the same for these two measures but they are handled differently WRT FX conversion
-    FunctionUtils.duplicateResult(Measures.PRESENT_VALUE, Measures.PRESENT_VALUE_MULTI_CCY, results);
     return results;
   }
 

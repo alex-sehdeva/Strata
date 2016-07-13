@@ -230,11 +230,19 @@ public interface RatesProvider
   /**
    * Gets the time series.
    * <p>
-   * This returns time series for the index. 
+   * This returns time series for the index.
    * 
    * @param index  the index
    * @return the time series
    */
   public abstract LocalDateDoubleTimeSeries timeSeries(Index index);
+
+  //-------------------------------------------------------------------------
+  /**
+   * Converts this provider to an equivalent {@code ImmutableRatesProvider}.
+   * 
+   * @return the equivalent immutable rates provider
+   */
+  public abstract ImmutableRatesProvider toImmutableRatesProvider();
 
 }

@@ -22,7 +22,6 @@ import java.time.YearMonth;
 import org.testng.annotations.Test;
 
 import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableMap;
 import com.opengamma.strata.basics.ReferenceData;
 import com.opengamma.strata.basics.currency.Currency;
 import com.opengamma.strata.basics.currency.FxMatrix;
@@ -38,8 +37,8 @@ import com.opengamma.strata.market.curve.Curve;
 import com.opengamma.strata.market.curve.CurveMetadata;
 import com.opengamma.strata.market.curve.Curves;
 import com.opengamma.strata.market.curve.InterpolatedNodalCurve;
-import com.opengamma.strata.market.interpolator.CurveInterpolator;
-import com.opengamma.strata.market.interpolator.CurveInterpolators;
+import com.opengamma.strata.market.curve.interpolator.CurveInterpolator;
+import com.opengamma.strata.market.curve.interpolator.CurveInterpolators;
 import com.opengamma.strata.market.param.CurrencyParameterSensitivities;
 import com.opengamma.strata.market.param.ParameterMetadata;
 import com.opengamma.strata.market.param.UnitParameterSensitivity;
@@ -200,13 +199,9 @@ public class ImmutableRatesProviderParameterSensitivityTest {
     CurveInterpolator interp = CurveInterpolators.NATURAL_CUBIC_SPLINE;
     String curveName = "GB_RPI_CURVE";
     InterpolatedNodalCurve interpCurve = InterpolatedNodalCurve.of(Curves.prices(curveName), x, y, interp);
-    PriceIndexValues values = SimplePriceIndexValues.of(
-        GB_RPI,
-        valuationDate,
-        interpCurve,
-        LocalDateDoubleTimeSeries.of(date(2013, 11, 30), 200));
     ImmutableRatesProvider provider = ImmutableRatesProvider.builder(VAL_DATE)
-        .priceIndexValues(ImmutableMap.of(GB_RPI, values))
+        .priceIndexCurve(GB_RPI, interpCurve)
+        .timeSeries(GB_RPI, LocalDateDoubleTimeSeries.of(date(2013, 11, 30), 200))
         .build();
 
     double pointSensiValue = 2.5;

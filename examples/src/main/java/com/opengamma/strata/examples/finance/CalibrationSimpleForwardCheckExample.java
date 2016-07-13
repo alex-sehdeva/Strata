@@ -7,7 +7,6 @@ package com.opengamma.strata.examples.finance;
 
 import static com.opengamma.strata.collect.Guavate.toImmutableList;
 import static com.opengamma.strata.measure.StandardComponents.marketDataFactory;
-import static java.util.stream.Collectors.toMap;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -42,10 +41,10 @@ import com.opengamma.strata.measure.rate.RatesMarketDataLookup;
 import com.opengamma.strata.product.Trade;
 
 /**
- * Test for curve calibration with 2 curves in USD. 
+ * Test for curve calibration with 2 curves in USD.
  * <p>
  * One curve is used for Discounting and Fed Fund forward.
- * The other curve is used for Libor 3M forward. 
+ * The other curve is used for Libor 3M forward.
  * The Libor forward curve is interpolated directly on forward rates, not on discount factors or zero-rates.
  * <p>
  * Curve configuration and market data loaded from csv files.
@@ -93,7 +92,7 @@ public class CalibrationSimpleForwardCheckExample {
       ResourceLocator.of(ResourceLocator.FILE_URL_PREFIX + PATH_CONFIG + "quotes/quotes.csv");
 
   //-------------------------------------------------------------------------
-  /** 
+  /**
    * Runs the calibration and checks that all the trades used in the curve calibration have a PV of 0.
    * 
    * @param args  -p to run the performance estimate
@@ -112,10 +111,9 @@ public class CalibrationSimpleForwardCheckExample {
       Object pvValue = pv.getValue();
       ArgChecker.isTrue(pvValue instanceof CurrencyAmount, "result type");
       CurrencyAmount ca = (CurrencyAmount) pvValue;
-      ArgChecker.isTrue(Math.abs(ca.getAmount()) < TOLERANCE_PV, "PV should be small");
       output += " with value: " + ca;
       System.out.println(output);
-      System.out.println(output);
+      ArgChecker.isTrue(Math.abs(ca.getAmount()) < TOLERANCE_PV, "PV should be small");
     }
 
     // optionally test performance
@@ -170,11 +168,9 @@ public class CalibrationSimpleForwardCheckExample {
     MarketData marketData = ImmutableMarketData.of(VAL_DATE, quotes);
 
     // load the curve definition
-    List<CurveGroupDefinition> defns =
+    Map<CurveGroupName, CurveGroupDefinition> defns =
         RatesCalibrationCsvLoader.load(GROUPS_RESOURCE, SETTINGS_RESOURCE, CALIBRATION_RESOURCE);
-
-    Map<CurveGroupName, CurveGroupDefinition> defnMap = defns.stream().collect(toMap(def -> def.getName(), def -> def));
-    CurveGroupDefinition curveGroupDefinition = defnMap.get(CURVE_GROUP_NAME);
+    CurveGroupDefinition curveGroupDefinition = defns.get(CURVE_GROUP_NAME).filtered(VAL_DATE, refData);
 
     // extract the trades used for calibration
     List<Trade> trades = curveGroupDefinition.getCurveDefinitions().stream()

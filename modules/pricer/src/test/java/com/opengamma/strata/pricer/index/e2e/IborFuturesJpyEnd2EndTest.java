@@ -29,8 +29,8 @@ import com.opengamma.strata.market.curve.CurveMetadata;
 import com.opengamma.strata.market.curve.CurveName;
 import com.opengamma.strata.market.curve.Curves;
 import com.opengamma.strata.market.curve.InterpolatedNodalCurve;
-import com.opengamma.strata.market.interpolator.CurveInterpolator;
-import com.opengamma.strata.market.interpolator.CurveInterpolators;
+import com.opengamma.strata.market.curve.interpolator.CurveInterpolator;
+import com.opengamma.strata.market.curve.interpolator.CurveInterpolators;
 import com.opengamma.strata.market.param.CurrencyParameterSensitivities;
 import com.opengamma.strata.market.sensitivity.PointSensitivities;
 import com.opengamma.strata.pricer.index.DiscountingIborFutureProductPricer;
@@ -45,7 +45,7 @@ import com.opengamma.strata.product.index.ResolvedIborFutureTrade;
 /**
  * End to end test on JPY-dominated trades.
  * <p>
- * The trades involve futures contract on 3m Euroyen TIBOR. 
+ * The trades involve futures contract on 3m Euroyen TIBOR.
  */
 @Test
 public class IborFuturesJpyEnd2EndTest {

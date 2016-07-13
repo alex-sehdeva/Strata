@@ -43,7 +43,7 @@ public class VolatilityIborCapFloorTradePricer {
   private final DiscountingPaymentPricer paymentPricer;
 
   /**
-   * Creates an instance. 
+   * Creates an instance.
    * 
    * @param productPricer  the pricer for {@link ResolvedIborCapFloor}
    * @param paymentPricer  the pricer for {@link Payment}
@@ -61,10 +61,13 @@ public class VolatilityIborCapFloorTradePricer {
    * Calculates the present value of the Ibor cap/floor trade.
    * <p>
    * The present value of the trade is the value on the valuation date.
+   * <p>
+   * The cap/floor leg and pay leg are typically in the same currency, thus the
+   * present value gamma is expressed as a single currency amount in most cases.
    * 
    * @param trade  the Ibor cap/floor trade
    * @param ratesProvider  the rates provider
-   * @param volatilities  the caplet/floorlet volatilities
+   * @param volatilities  the volatilities
    * @return the present value
    */
   public MultiCurrencyAmount presentValue(
@@ -80,23 +83,25 @@ public class VolatilityIborCapFloorTradePricer {
     return pvProduct.plus(pvPremium);
   }
 
+  //-------------------------------------------------------------------------
   /**
-   * Calculates the present value curve sensitivity of the Ibor cap/floor trade.
+   * Calculates the present value rates sensitivity of the Ibor cap/floor trade.
    * <p>
-   * The present value sensitivity of the trade is the sensitivity of the present value to the underlying curves.
+   * The present value rates sensitivity of the trade is the sensitivity
+   * of the present value to the underlying curves.
    * 
    * @param trade  the Ibor cap/floor trade
    * @param ratesProvider  the rates provider
-   * @param volatilities  the caplet/floorlet volatilities
+   * @param volatilities  the volatilities
    * @return the present value sensitivity
    */
-  public PointSensitivities presentValueSensitivity(
+  public PointSensitivities presentValueSensitivityRates(
       ResolvedIborCapFloorTrade trade,
       RatesProvider ratesProvider,
       IborCapletFloorletVolatilities volatilities) {
 
     PointSensitivityBuilder pvSensiProduct =
-        productPricer.presentValueSensitivity(trade.getProduct(), ratesProvider, volatilities);
+        productPricer.presentValueSensitivityRates(trade.getProduct(), ratesProvider, volatilities);
     if (!trade.getPremium().isPresent()) {
       return pvSensiProduct.build();
     }
@@ -107,11 +112,31 @@ public class VolatilityIborCapFloorTradePricer {
 
   //-------------------------------------------------------------------------
   /**
+   * Calculates the present value volatility sensitivity of the Ibor cap/floor product.
+   * <p>
+   * The present value volatility sensitivity of the product is the sensitivity
+   * of the present value to the volatility values.
+   * 
+   * @param trade  the Ibor cap/floor trade
+   * @param ratesProvider  the rates provider
+   * @param volatilities  the volatilities
+   * @return the present value sensitivity
+   */
+  public PointSensitivityBuilder presentValueSensitivityModelParamsVolatility(
+      ResolvedIborCapFloorTrade trade,
+      RatesProvider ratesProvider,
+      IborCapletFloorletVolatilities volatilities) {
+
+    return productPricer.presentValueSensitivityModelParamsVolatility(trade.getProduct(), ratesProvider, volatilities);
+  }
+
+  //-------------------------------------------------------------------------
+  /**
    * Calculates the currency exposure of the Ibor cap/floor trade.
    * 
    * @param trade  the Ibor cap/floor trade
    * @param ratesProvider  the rates provider
-   * @param volatilities  the caplet/floorlet volatilities
+   * @param volatilities  the volatilities
    * @return the currency exposure
    */
   public MultiCurrencyAmount currencyExposure(
@@ -127,12 +152,13 @@ public class VolatilityIborCapFloorTradePricer {
     return ceProduct.plus(pvPremium);
   }
 
+  //-------------------------------------------------------------------------
   /**
    * Calculates the current cash of the Ibor cap/floor trade.
    * 
    * @param trade  the Ibor cap/floor trade
    * @param ratesProvider  the rates provider
-   * @param volatilities  the caplet/floorlet volatilities
+   * @param volatilities  the volatilities
    * @return the current cash
    */
   public MultiCurrencyAmount currentCash(

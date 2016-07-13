@@ -7,8 +7,9 @@ package com.opengamma.strata.measure.dsf;
 
 import com.opengamma.strata.basics.currency.CurrencyAmount;
 import com.opengamma.strata.basics.currency.MultiCurrencyAmount;
-import com.opengamma.strata.data.scenario.CurrencyValuesArray;
-import com.opengamma.strata.data.scenario.MultiCurrencyValuesArray;
+import com.opengamma.strata.data.scenario.CurrencyScenarioArray;
+import com.opengamma.strata.data.scenario.DoubleScenarioArray;
+import com.opengamma.strata.data.scenario.MultiCurrencyScenarioArray;
 import com.opengamma.strata.data.scenario.ScenarioArray;
 import com.opengamma.strata.data.scenario.ScenarioMarketData;
 import com.opengamma.strata.market.param.CurrencyParameterSensitivities;
@@ -27,6 +28,15 @@ import com.opengamma.strata.product.dsf.ResolvedDsfTrade;
  * typically work with {@link DsfTrade}. Call
  * {@link DsfTrade#resolve(com.opengamma.strata.basics.ReferenceData) DsfTrade::resolve(ReferenceData)}
  * to convert {@code DsfTrade} to {@code ResolvedDsfTrade}.
+ * 
+ * <h4>Price</h4>
+ * The price of a DSF is based on the present value (NPV) of the underlying swap on the delivery date.
+ * For example, a price of 100.182 represents a present value of $100,182.00, if the notional is $100,000.
+ * This price can also be viewed as a percentage present value - {@code (100 + percentPv)}, or 0.182% in this example.
+ * <p>
+ * Strata uses <i>decimal prices</i> for DSFs in the trade model, pricers and market data.
+ * The decimal price is based on the decimal multiplier equivalent to the implied percentage.
+ * Thus the market price of 100.182 is represented in Strata by 1.00182.
  */
 public class DsfTradeCalculations {
 
@@ -62,7 +72,7 @@ public class DsfTradeCalculations {
    * @param marketData  the market data
    * @return the present value, one entry per scenario
    */
-  public CurrencyValuesArray presentValue(
+  public CurrencyScenarioArray presentValue(
       ResolvedDsfTrade trade,
       RatesMarketDataLookup lookup,
       ScenarioMarketData marketData) {
@@ -98,7 +108,7 @@ public class DsfTradeCalculations {
    * @param marketData  the market data
    * @return the present value sensitivity, one entry per scenario
    */
-  public MultiCurrencyValuesArray pv01CalibratedSum(
+  public MultiCurrencyScenarioArray pv01CalibratedSum(
       ResolvedDsfTrade trade,
       RatesMarketDataLookup lookup,
       ScenarioMarketData marketData) {
@@ -180,7 +190,7 @@ public class DsfTradeCalculations {
    * @param marketData  the market data
    * @return the present value sensitivity, one entry per scenario
    */
-  public MultiCurrencyValuesArray pv01MarketQuoteSum(
+  public MultiCurrencyScenarioArray pv01MarketQuoteSum(
       ResolvedDsfTrade trade,
       RatesMarketDataLookup lookup,
       ScenarioMarketData marketData) {
@@ -250,6 +260,49 @@ public class DsfTradeCalculations {
 
   //-------------------------------------------------------------------------
   /**
+   * Calculates unit price across one or more scenarios.
+   * <p>
+   * This is the price of a single unit of the security.
+   * <p>
+   * Strata uses <i>decimal prices</i> for DSFs in the trade model, pricers and market data.
+   * The decimal price is based on the decimal multiplier equivalent to the implied percentage.
+   * Thus the market price of 100.182 is represented in Strata by 1.00182.
+   * 
+   * @param trade  the trade
+   * @param lookup  the lookup used to query the market data
+   * @param marketData  the market data
+   * @return the present value, one entry per scenario
+   */
+  public DoubleScenarioArray unitPrice(
+      ResolvedDsfTrade trade,
+      RatesMarketDataLookup lookup,
+      ScenarioMarketData marketData) {
+
+    return calc.unitPrice(trade, lookup.marketDataView(marketData));
+  }
+
+  /**
+   * Calculates unit price for a single set of market data.
+   * <p>
+   * This is the price of a single unit of the security.
+   * <p>
+   * Strata uses <i>decimal prices</i> for DSFs in the trade model, pricers and market data.
+   * The decimal price is based on the decimal multiplier equivalent to the implied percentage.
+   * Thus the market price of 100.182 is represented in Strata by 1.00182.
+   * 
+   * @param trade  the trade
+   * @param ratesProvider  the market data
+   * @return the present value
+   */
+  public double unitPrice(
+      ResolvedDsfTrade trade,
+      RatesProvider ratesProvider) {
+
+    return calc.unitPrice(trade, ratesProvider);
+  }
+
+  //-------------------------------------------------------------------------
+  /**
    * Calculates currency exposure across one or more scenarios.
    * <p>
    * The currency risk, expressed as the equivalent amount in each currency.
@@ -259,7 +312,7 @@ public class DsfTradeCalculations {
    * @param marketData  the market data
    * @return the currency exposure, one entry per scenario
    */
-  public MultiCurrencyValuesArray currencyExposure(
+  public MultiCurrencyScenarioArray currencyExposure(
       ResolvedDsfTrade trade,
       RatesMarketDataLookup lookup,
       ScenarioMarketData marketData) {

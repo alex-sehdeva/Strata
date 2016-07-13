@@ -42,9 +42,9 @@ import com.opengamma.strata.product.common.LongShort;
 import com.opengamma.strata.product.swap.ResolvedSwap;
 import com.opengamma.strata.product.swap.Swap;
 import com.opengamma.strata.product.swap.SwapLegType;
-import com.opengamma.strata.product.swaption.CashSettlement;
-import com.opengamma.strata.product.swaption.CashSettlementMethod;
-import com.opengamma.strata.product.swaption.PhysicalSettlement;
+import com.opengamma.strata.product.swaption.CashSwaptionSettlement;
+import com.opengamma.strata.product.swaption.CashSwaptionSettlementMethod;
+import com.opengamma.strata.product.swaption.PhysicalSwaptionSettlement;
 import com.opengamma.strata.product.swaption.ResolvedSwaption;
 import com.opengamma.strata.product.swaption.Swaption;
 import com.opengamma.strata.product.swaption.SwaptionSettlement;
@@ -77,11 +77,9 @@ public class BlackSwaptionPhysicalProductPricerTest {
   private static final Swap SWAP_PAST = USD_FIXED_6M_LIBOR_3M // Only for checks; no actual computation on that swap
       .toTrade(SWAPTION_PAST_EXERCISE_DATE, SWAPTION_PAST_EXERCISE_DATE, SWAPTION_PAST_EXERCISE_DATE.plusYears(10),
           BUY, NOTIONAL, STRIKE).getProduct();
-  private static final SwaptionSettlement PHYSICAL_SETTLE = PhysicalSettlement.DEFAULT;
-  private static final SwaptionSettlement CASH_SETTLE = CashSettlement.builder()
-      .cashSettlementMethod(CashSettlementMethod.PAR_YIELD)
-      .settlementDate(SWAP_REC.getStartDate().getUnadjusted())
-      .build();
+  private static final SwaptionSettlement PHYSICAL_SETTLE = PhysicalSwaptionSettlement.DEFAULT;
+  private static final SwaptionSettlement CASH_SETTLE =
+      CashSwaptionSettlement.of(SWAP_REC.getStartDate().getUnadjusted(), CashSwaptionSettlementMethod.PAR_YIELD);
 
   private static final ResolvedSwaption SWAPTION_LONG_REC = Swaption.builder()
       .swaptionSettlement(PHYSICAL_SETTLE)
@@ -440,16 +438,18 @@ public class BlackSwaptionPhysicalProductPricerTest {
     Surface surfaceDw = ConstantSurface.of(
         SwaptionBlackVolatilityDataSets.META_DATA, SwaptionBlackVolatilityDataSets.VOLATILITY - shiftVol);
     CurrencyAmount pvP = PRICER_SWAPTION_BLACK.presentValue(SWAPTION_LONG_PAY, MULTI_USD,
-        BlackSwaptionExpiryTenorVolatilities.of(surfaceUp, VAL_DATE.atStartOfDay(ZoneOffset.UTC)));
+        BlackSwaptionExpiryTenorVolatilities.of(
+            BLACK_VOL_CST_SWAPTION_PROVIDER_USD.getConvention(), VAL_DATE.atStartOfDay(ZoneOffset.UTC), surfaceUp));
     CurrencyAmount pvM = PRICER_SWAPTION_BLACK.presentValue(SWAPTION_LONG_PAY, MULTI_USD,
-        BlackSwaptionExpiryTenorVolatilities.of(surfaceDw, VAL_DATE.atStartOfDay(ZoneOffset.UTC)));
+        BlackSwaptionExpiryTenorVolatilities.of(
+            BLACK_VOL_CST_SWAPTION_PROVIDER_USD.getConvention(), VAL_DATE.atStartOfDay(ZoneOffset.UTC), surfaceDw));
     double pvnvsFd = (pvP.getAmount() - pvM.getAmount()) / (2 * shiftVol);
     SwaptionSensitivity pvnvsAd = PRICER_SWAPTION_BLACK
         .presentValueSensitivityModelParamsVolatility(SWAPTION_LONG_PAY, MULTI_USD, BLACK_VOL_CST_SWAPTION_PROVIDER_USD);
     assertEquals(pvnvsAd.getCurrency(), USD);
     assertEquals(pvnvsAd.getSensitivity(), pvnvsFd, TOLERANCE_PV_VEGA);
     assertEquals(pvnvsAd.getConvention(), USD_FIXED_6M_LIBOR_3M);
-    assertEquals(pvnvsAd.getExpiry(), SWAPTION_LONG_PAY.getExpiry());
+    assertEquals(pvnvsAd.getExpiry(), BLACK_VOL_CST_SWAPTION_PROVIDER_USD.relativeTime(SWAPTION_LONG_PAY.getExpiry()));
     assertEquals(pvnvsAd.getTenor(), SWAP_TENOR_YEAR, TOLERANCE_RATE);
     assertEquals(pvnvsAd.getStrike(), STRIKE, TOLERANCE_RATE);
     double forward = PRICER_SWAP.parRate(RSWAP_REC, MULTI_USD);

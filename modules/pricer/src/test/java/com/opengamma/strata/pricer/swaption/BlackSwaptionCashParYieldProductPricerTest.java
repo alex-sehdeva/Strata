@@ -13,6 +13,7 @@ import static com.opengamma.strata.basics.index.IborIndices.EUR_EURIBOR_6M;
 import static com.opengamma.strata.basics.schedule.Frequency.P12M;
 import static com.opengamma.strata.basics.schedule.Frequency.P6M;
 import static com.opengamma.strata.collect.TestHelper.assertThrowsIllegalArg;
+import static com.opengamma.strata.market.curve.interpolator.CurveInterpolators.LINEAR;
 import static com.opengamma.strata.product.common.LongShort.LONG;
 import static com.opengamma.strata.product.common.LongShort.SHORT;
 import static com.opengamma.strata.product.common.PayReceive.PAY;
@@ -43,9 +44,8 @@ import com.opengamma.strata.market.curve.CurveMetadata;
 import com.opengamma.strata.market.curve.CurveName;
 import com.opengamma.strata.market.curve.Curves;
 import com.opengamma.strata.market.curve.InterpolatedNodalCurve;
-import com.opengamma.strata.market.interpolator.CurveExtrapolators;
-import com.opengamma.strata.market.interpolator.CurveInterpolator;
-import com.opengamma.strata.market.interpolator.CurveInterpolators;
+import com.opengamma.strata.market.curve.interpolator.CurveInterpolator;
+import com.opengamma.strata.market.curve.interpolator.CurveInterpolators;
 import com.opengamma.strata.market.param.CurrencyParameterSensitivities;
 import com.opengamma.strata.market.param.CurrencyParameterSensitivity;
 import com.opengamma.strata.market.sensitivity.PointSensitivities;
@@ -55,9 +55,8 @@ import com.opengamma.strata.market.surface.InterpolatedNodalSurface;
 import com.opengamma.strata.market.surface.Surface;
 import com.opengamma.strata.market.surface.SurfaceMetadata;
 import com.opengamma.strata.market.surface.Surfaces;
-import com.opengamma.strata.math.impl.interpolation.CombinedInterpolatorExtrapolator;
-import com.opengamma.strata.math.impl.interpolation.GridInterpolator2D;
-import com.opengamma.strata.math.impl.interpolation.Interpolator1D;
+import com.opengamma.strata.market.surface.interpolator.GridSurfaceInterpolator;
+import com.opengamma.strata.market.surface.interpolator.SurfaceInterpolator;
 import com.opengamma.strata.pricer.impl.option.BlackFormulaRepository;
 import com.opengamma.strata.pricer.rate.ImmutableRatesProvider;
 import com.opengamma.strata.pricer.sensitivity.RatesFiniteDifferenceSensitivityCalculator;
@@ -74,9 +73,9 @@ import com.opengamma.strata.product.swap.SwapLeg;
 import com.opengamma.strata.product.swap.SwapLegType;
 import com.opengamma.strata.product.swap.type.FixedIborSwapConvention;
 import com.opengamma.strata.product.swap.type.FixedIborSwapConventions;
-import com.opengamma.strata.product.swaption.CashSettlement;
-import com.opengamma.strata.product.swaption.CashSettlementMethod;
-import com.opengamma.strata.product.swaption.PhysicalSettlement;
+import com.opengamma.strata.product.swaption.CashSwaptionSettlement;
+import com.opengamma.strata.product.swaption.CashSwaptionSettlementMethod;
+import com.opengamma.strata.product.swaption.PhysicalSwaptionSettlement;
 import com.opengamma.strata.product.swaption.ResolvedSwaption;
 import com.opengamma.strata.product.swaption.Swaption;
 
@@ -94,30 +93,28 @@ public class BlackSwaptionCashParYieldProductPricerTest {
   private static final DoubleArray DSC_RATE = DoubleArray.of(0.0150, 0.0125, 0.0150, 0.0175, 0.0150, 0.0150);
   private static final CurveName DSC_NAME = CurveName.of("EUR Dsc");
   private static final CurveMetadata META_DSC = Curves.zeroRates(DSC_NAME, ACT_ACT_ISDA);
-  private static final InterpolatedNodalCurve DSC_CURVE = InterpolatedNodalCurve.of(META_DSC, DSC_TIME, DSC_RATE, INTERPOLATOR);
+  private static final InterpolatedNodalCurve DSC_CURVE =
+      InterpolatedNodalCurve.of(META_DSC, DSC_TIME, DSC_RATE, INTERPOLATOR);
   private static final DoubleArray FWD6_TIME = DoubleArray.of(0.0, 0.5, 1.0, 2.0, 5.0, 10.0);
   private static final DoubleArray FWD6_RATE = DoubleArray.of(0.0150, 0.0125, 0.0150, 0.0175, 0.0150, 0.0150);
   private static final CurveName FWD6_NAME = CurveName.of("EUR EURIBOR 6M");
   private static final CurveMetadata META_FWD6 = Curves.zeroRates(FWD6_NAME, ACT_ACT_ISDA);
-  private static final InterpolatedNodalCurve FWD6_CURVE = InterpolatedNodalCurve.of(META_FWD6, FWD6_TIME, FWD6_RATE,
-      INTERPOLATOR);
+  private static final InterpolatedNodalCurve FWD6_CURVE =
+      InterpolatedNodalCurve.of(META_FWD6, FWD6_TIME, FWD6_RATE, INTERPOLATOR);
   private static final ImmutableRatesProvider RATE_PROVIDER = ImmutableRatesProvider.builder(VAL_DATE)
       .discountCurve(EUR, DSC_CURVE)
       .iborIndexCurve(EUR_EURIBOR_6M, FWD6_CURVE)
       .build();
   // surface
-  private static final Interpolator1D LINEAR_FLAT = CombinedInterpolatorExtrapolator.of(
-      CurveInterpolators.LINEAR.getName(), CurveExtrapolators.FLAT.getName(), CurveExtrapolators.FLAT.getName());
-  private static final GridInterpolator2D INTERPOLATOR_2D = new GridInterpolator2D(LINEAR_FLAT, LINEAR_FLAT);
-  private static final DoubleArray EXPIRY = DoubleArray.of(0.5, 1.0, 5.0, 0.5, 1.0, 5.0);
-  private static final DoubleArray TENOR = DoubleArray.of(2, 2, 2, 10, 10, 10);
-  private static final DoubleArray VOL = DoubleArray.of(0.35, 0.34, 0.25, 0.30, 0.25, 0.20);
+  private static final SurfaceInterpolator INTERPOLATOR_2D = GridSurfaceInterpolator.of(LINEAR, LINEAR);
+  private static final DoubleArray EXPIRY = DoubleArray.of(0.5, 0.5, 1.0, 1.0, 5.0, 5.0);
+  private static final DoubleArray TENOR = DoubleArray.of(2, 10, 2, 10, 2, 10);
+  private static final DoubleArray VOL = DoubleArray.of(0.35, 0.30, 0.34, 0.25, 0.25, 0.20);
   private static final FixedIborSwapConvention SWAP_CONVENTION = FixedIborSwapConventions.EUR_FIXED_1Y_EURIBOR_6M;
-  private static final SurfaceMetadata METADATA =
-      Surfaces.swaptionBlackExpiryTenor("Black Vol", ACT_ACT_ISDA, SWAP_CONVENTION);
+  private static final SurfaceMetadata METADATA = Surfaces.blackVolatilityByExpiryTenor("Black Vol", ACT_ACT_ISDA);
   private static final Surface SURFACE = InterpolatedNodalSurface.of(METADATA, EXPIRY, TENOR, VOL, INTERPOLATOR_2D);
   private static final BlackSwaptionExpiryTenorVolatilities VOL_PROVIDER =
-      BlackSwaptionExpiryTenorVolatilities.of(SURFACE, VAL_DATE.atStartOfDay(ZoneOffset.UTC));
+      BlackSwaptionExpiryTenorVolatilities.of(SWAP_CONVENTION, VAL_DATE.atStartOfDay(ZoneOffset.UTC), SURFACE);
   // underlying swap and swaption
   private static final HolidayCalendarId CALENDAR = HolidayCalendarIds.SAT_SUN;
   private static final BusinessDayAdjustment BDA_MF = BusinessDayAdjustment.of(MODIFIED_FOLLOWING, CALENDAR);
@@ -188,10 +185,8 @@ public class BlackSwaptionCashParYieldProductPricerTest {
   private static final ResolvedSwap RSWAP_REC = SWAP_REC.resolve(REF_DATA);
   private static final Swap SWAP_PAY = Swap.of(FIXED_LEG_PAY, IBOR_LEG_REC);
   private static final ResolvedSwapLeg RFIXED_LEG_REC = FIXED_LEG_REC.resolve(REF_DATA);
-  private static final CashSettlement PAR_YIELD = CashSettlement.builder()
-      .cashSettlementMethod(CashSettlementMethod.PAR_YIELD)
-      .settlementDate(SETTLE)
-      .build();
+  private static final CashSwaptionSettlement PAR_YIELD =
+      CashSwaptionSettlement.of(SETTLE, CashSwaptionSettlementMethod.PAR_YIELD);
   private static final ResolvedSwaption SWAPTION_REC_LONG = Swaption
       .builder()
       .expiryDate(AdjustableDate.of(MATURITY, BDA_MF))
@@ -243,9 +238,9 @@ public class BlackSwaptionCashParYieldProductPricerTest {
           .iborIndexCurve(EUR_EURIBOR_6M, FWD6_CURVE)
           .build();
   private static final BlackSwaptionExpiryTenorVolatilities VOL_PROVIDER_AT_MATURITY =
-      BlackSwaptionExpiryTenorVolatilities.of(SURFACE, MATURITY.atStartOfDay(ZoneOffset.UTC));
+      BlackSwaptionExpiryTenorVolatilities.of(SWAP_CONVENTION, MATURITY.atStartOfDay(ZoneOffset.UTC), SURFACE);
   private static final BlackSwaptionExpiryTenorVolatilities VOL_PROVIDER_AFTER_MATURITY =
-      BlackSwaptionExpiryTenorVolatilities.of(SURFACE, MATURITY.plusDays(1).atStartOfDay(ZoneOffset.UTC));
+      BlackSwaptionExpiryTenorVolatilities.of(SWAP_CONVENTION, MATURITY.plusDays(1).atStartOfDay(ZoneOffset.UTC), SURFACE);
   // test parameters
   private static final double TOL = 1.0e-12;
   private static final double FD_EPS = 1.0e-7;
@@ -316,7 +311,7 @@ public class BlackSwaptionCashParYieldProductPricerTest {
         .expiryDate(AdjustableDate.of(MATURITY, BDA_MF))
         .expiryTime(LocalTime.NOON)
         .expiryZone(ZoneOffset.UTC)
-        .swaptionSettlement(PhysicalSettlement.DEFAULT)
+        .swaptionSettlement(PhysicalSwaptionSettlement.DEFAULT)
         .longShort(LONG)
         .underlying(SWAP_PAY)
         .build();
@@ -643,14 +638,14 @@ public class BlackSwaptionCashParYieldProductPricerTest {
     assertEquals(sensiRec.getCurrency(), EUR);
     assertEquals(sensiRec.getSensitivity(), expectedRec, NOTIONAL * TOL);
     assertEquals(sensiRec.getConvention(), SWAP_CONVENTION);
-    assertEquals(sensiRec.getExpiry(), SWAPTION_REC_LONG.getExpiry());
+    assertEquals(sensiRec.getExpiry(), expiry);
     assertEquals(sensiRec.getTenor(), 5.0);
     assertEquals(sensiRec.getStrike(), RATE);
     assertEquals(sensiRec.getForward(), forward, TOL);
     assertEquals(sensiPay.getCurrency(), EUR);
     assertEquals(sensiPay.getSensitivity(), expectedPay, NOTIONAL * TOL);
     assertEquals(sensiRec.getConvention(), SWAP_CONVENTION);
-    assertEquals(sensiPay.getExpiry(), SWAPTION_REC_LONG.getExpiry());
+    assertEquals(sensiPay.getExpiry(), expiry);
     assertEquals(sensiPay.getTenor(), 5.0);
     assertEquals(sensiPay.getStrike(), RATE);
     assertEquals(sensiPay.getForward(), forward, TOL);

@@ -8,12 +8,17 @@ package com.opengamma.strata.pricer.bond;
 import com.opengamma.strata.collect.ArgChecker;
 import com.opengamma.strata.market.sensitivity.PointSensitivities;
 import com.opengamma.strata.pricer.impl.option.BlackFormulaRepository;
+import com.opengamma.strata.product.bond.BondFuture;
 import com.opengamma.strata.product.bond.ResolvedBondFuture;
 import com.opengamma.strata.product.bond.ResolvedBondFutureOption;
-import com.opengamma.strata.product.common.FutureOptionPremiumStyle;
+import com.opengamma.strata.product.option.FutureOptionPremiumStyle;
 
 /**
- * Pricer of options on bond future with a lognormal model on the underlying future price.
+ * Pricer of options on bond future with a log-normal model on the underlying future price.
+ * 
+ * <h4>Price</h4>
+ * Strata uses <i>decimal prices</i> for bond futures options in the trade model, pricers and market data.
+ * This is coherent with the pricing of {@link BondFuture}.
  */
 public final class BlackBondFutureOptionMarginedProductPricer extends BondFutureOptionMarginedProductPricer {
 
@@ -56,6 +61,9 @@ public final class BlackBondFutureOptionMarginedProductPricer extends BondFuture
    * The price of the option is the price on the valuation date.
    * <p>
    * This calculates the underlying future price using the future pricer.
+   * <p>
+   * Strata uses <i>decimal prices</i> for bond futures. This is coherent with the pricing of {@link BondFuture}.
+   * For example, a price of 1.32% is represented in Strata by 0.0132.
    * 
    * @param futureOption  the option product
    * @param ratesProvider  the rates provider
@@ -76,6 +84,9 @@ public final class BlackBondFutureOptionMarginedProductPricer extends BondFuture
    * based on the price of the underlying future.
    * <p>
    * The price of the option is the price on the valuation date.
+   * <p>
+   * Strata uses <i>decimal prices</i> for bond futures. This is coherent with the pricing of {@link BondFuture}.
+   * For example, a price of 1.32% is represented in Strata by 0.0132.
    * 
    * @param futureOption  the option product
    * @param ratesProvider  the rates provider
@@ -295,7 +306,7 @@ public final class BlackBondFutureOptionMarginedProductPricer extends BondFuture
    * @param volatilityProvider  the provider of Black volatility
    * @return the price curve sensitivity of the product
    */
-  public PointSensitivities priceSensitivityStickyStrike(
+  public PointSensitivities priceSensitivityRatesStickyStrike(
       ResolvedBondFutureOption futureOption,
       LegalEntityDiscountingProvider ratesProvider,
       BlackVolatilityBondFutureProvider volatilityProvider) {
@@ -303,14 +314,14 @@ public final class BlackBondFutureOptionMarginedProductPricer extends BondFuture
     ArgChecker.isTrue(futureOption.getPremiumStyle().equals(FutureOptionPremiumStyle.DAILY_MARGIN),
         "Premium style should be DAILY_MARGIN");
     double futurePrice = futurePrice(futureOption, ratesProvider);
-    return priceSensitivityStickyStrike(futureOption, ratesProvider, volatilityProvider, futurePrice);
+    return priceSensitivityRatesStickyStrike(futureOption, ratesProvider, volatilityProvider, futurePrice);
   }
 
   /**
    * Calculates the price sensitivity of the bond future option product based on the price of the underlying future.
    * <p>
    * The price sensitivity of the product is the sensitivity of the price to the underlying curves.
-   * The volatility is unchanged for a fixed strike in the sensitivity computation, hence the "StickyStrike" name. 
+   * The volatility is unchanged for a fixed strike in the sensitivity computation, hence the "StickyStrike" name.
    * 
    * @param futureOption  the option product
    * @param ratesProvider  the rates provider
@@ -318,7 +329,7 @@ public final class BlackBondFutureOptionMarginedProductPricer extends BondFuture
    * @param futurePrice  the price of the underlying future
    * @return the price curve sensitivity of the product
    */
-  public PointSensitivities priceSensitivityStickyStrike(
+  public PointSensitivities priceSensitivityRatesStickyStrike(
       ResolvedBondFutureOption futureOption,
       LegalEntityDiscountingProvider ratesProvider,
       BlackVolatilityBondFutureProvider volatilityProvider,
@@ -338,7 +349,7 @@ public final class BlackBondFutureOptionMarginedProductPricer extends BondFuture
 
     ArgChecker.isTrue(volatilityProvider instanceof BlackVolatilityBondFutureProvider,
         "Provider must be of type BlackVolatilityBondFutureProvider");
-    return priceSensitivityStickyStrike(
+    return priceSensitivityRatesStickyStrike(
         futureOption, ratesProvider, (BlackVolatilityBondFutureProvider) volatilityProvider);
   }
 
@@ -353,13 +364,13 @@ public final class BlackBondFutureOptionMarginedProductPricer extends BondFuture
    * @param volatilityProvider  the provider of Black volatility
    * @return the sensitivity
    */
-  public BondFutureOptionSensitivity priceSensitivityBlackVolatility(
+  public BondFutureOptionSensitivity priceSensitivityModelParamsVolatility(
       ResolvedBondFutureOption futureOption,
       LegalEntityDiscountingProvider ratesProvider,
       BlackVolatilityBondFutureProvider volatilityProvider) {
 
     double futurePrice = futurePrice(futureOption, ratesProvider);
-    return priceSensitivityBlackVolatility(futureOption, ratesProvider, volatilityProvider, futurePrice);
+    return priceSensitivityModelParamsVolatility(futureOption, ratesProvider, volatilityProvider, futurePrice);
   }
 
   /**
@@ -372,7 +383,7 @@ public final class BlackBondFutureOptionMarginedProductPricer extends BondFuture
    * @param futurePrice  the underlying future price
    * @return the sensitivity
    */
-  public BondFutureOptionSensitivity priceSensitivityBlackVolatility(
+  public BondFutureOptionSensitivity priceSensitivityModelParamsVolatility(
       ResolvedBondFutureOption futureOption,
       LegalEntityDiscountingProvider ratesProvider,
       BlackVolatilityBondFutureProvider volatilityProvider,

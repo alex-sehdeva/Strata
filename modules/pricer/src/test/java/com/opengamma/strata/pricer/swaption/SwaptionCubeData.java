@@ -6,6 +6,7 @@
 package com.opengamma.strata.pricer.swaption;
 
 import static com.opengamma.strata.basics.date.DayCounts.ACT_365F;
+import static com.opengamma.strata.market.curve.interpolator.CurveInterpolators.LINEAR;
 
 import java.time.LocalDate;
 import java.time.Period;
@@ -20,15 +21,11 @@ import com.opengamma.strata.basics.date.DayCount;
 import com.opengamma.strata.basics.date.Tenor;
 import com.opengamma.strata.collect.array.DoubleArray;
 import com.opengamma.strata.market.ValueType;
-import com.opengamma.strata.market.interpolator.CurveExtrapolators;
-import com.opengamma.strata.market.interpolator.CurveInterpolators;
 import com.opengamma.strata.market.surface.DefaultSurfaceMetadata;
 import com.opengamma.strata.market.surface.InterpolatedNodalSurface;
-import com.opengamma.strata.market.surface.SurfaceInfoType;
 import com.opengamma.strata.market.surface.SurfaceMetadata;
-import com.opengamma.strata.math.impl.interpolation.CombinedInterpolatorExtrapolator;
-import com.opengamma.strata.math.impl.interpolation.GridInterpolator2D;
-import com.opengamma.strata.math.impl.interpolation.Interpolator1D;
+import com.opengamma.strata.market.surface.interpolator.GridSurfaceInterpolator;
+import com.opengamma.strata.market.surface.interpolator.SurfaceInterpolator;
 import com.opengamma.strata.product.swap.type.FixedIborSwapConvention;
 import com.opengamma.strata.product.swap.type.FixedIborSwapConventions;
 
@@ -145,16 +142,18 @@ public class SwaptionCubeData {
   }
   public static final double[] TENOR_TIME = {1, 2, 1, 2, 1, 2, 1, 2};
   private static final SurfaceMetadata METADATA_NORMAL = DefaultSurfaceMetadata.builder().surfaceName("ATM")
-      .xValueType(ValueType.YEAR_FRACTION).yValueType(ValueType.YEAR_FRACTION)
-      .zValueType(ValueType.NORMAL_VOLATILITY).addInfo(SurfaceInfoType.SWAP_CONVENTION, EUR_FIXED_1Y_EURIBOR_6M)
-      .dayCount(DAY_COUNT).build();
+      .xValueType(ValueType.YEAR_FRACTION)
+      .yValueType(ValueType.YEAR_FRACTION)
+      .zValueType(ValueType.NORMAL_VOLATILITY)
+      .dayCount(DAY_COUNT)
+      .build();
   private static final SurfaceMetadata METADATA_LOGNORMAL = DefaultSurfaceMetadata.builder().surfaceName("ATM")
-      .xValueType(ValueType.YEAR_FRACTION).yValueType(ValueType.YEAR_FRACTION)
-      .zValueType(ValueType.BLACK_VOLATILITY).addInfo(SurfaceInfoType.SWAP_CONVENTION, EUR_FIXED_1Y_EURIBOR_6M)
-      .dayCount(DAY_COUNT).build();
-  private static final Interpolator1D LINEAR_FLAT = CombinedInterpolatorExtrapolator.of(
-      CurveInterpolators.LINEAR.getName(), CurveExtrapolators.FLAT.getName(), CurveExtrapolators.FLAT.getName());
-  private static final GridInterpolator2D INTERPOLATOR_2D = new GridInterpolator2D(LINEAR_FLAT, LINEAR_FLAT);
+      .xValueType(ValueType.YEAR_FRACTION)
+      .yValueType(ValueType.YEAR_FRACTION)
+      .zValueType(ValueType.BLACK_VOLATILITY)
+      .dayCount(DAY_COUNT)
+      .build();
+  private static final SurfaceInterpolator INTERPOLATOR_2D = GridSurfaceInterpolator.of(LINEAR, LINEAR);
   public static final InterpolatedNodalSurface ATM_NORMAL_SIMPLE_SURFACE = 
       InterpolatedNodalSurface.of(METADATA_NORMAL, DoubleArray.ofUnsafe(EXPIRIES_SIMPLE_2_TIME), 
           DoubleArray.ofUnsafe(TENOR_TIME), DoubleArray.ofUnsafe(DATA_NORMAL_ATM_SIMPLE), INTERPOLATOR_2D);
@@ -162,7 +161,7 @@ public class SwaptionCubeData {
       InterpolatedNodalSurface.of(METADATA_LOGNORMAL, DoubleArray.ofUnsafe(EXPIRIES_SIMPLE_2_TIME), 
           DoubleArray.ofUnsafe(TENOR_TIME), DoubleArray.ofUnsafe(DATA_LOGNORMAL_ATM_SIMPLE), INTERPOLATOR_2D);
   public static final SwaptionVolatilities ATM_NORMAL_SIMPLE = 
-      NormalSwaptionExpiryTenorVolatilities.of(ATM_NORMAL_SIMPLE_SURFACE, DATA_TIME);
+      NormalSwaptionExpiryTenorVolatilities.of(EUR_FIXED_1Y_EURIBOR_6M, DATA_TIME, ATM_NORMAL_SIMPLE_SURFACE);
   public static final SwaptionVolatilities ATM_LOGNORMAL_SIMPLE = 
-      BlackSwaptionExpiryTenorVolatilities.of(ATM_LOGNORMAL_SIMPLE_SURFACE, DATA_TIME);
+      BlackSwaptionExpiryTenorVolatilities.of(EUR_FIXED_1Y_EURIBOR_6M, DATA_TIME, ATM_LOGNORMAL_SIMPLE_SURFACE);
 }
