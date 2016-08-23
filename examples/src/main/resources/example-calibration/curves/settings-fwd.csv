@@ -1,1 +1,5 @@
-Curve Name,Value Type,Day Count,Interpolator,Left Extrapolator,Right ExtrapolatorUSD-Disc,Zero,Act/365F,Linear,Flat,FlatUSD-3ML,Forward,Act/365F,Linear,Flat,FlatAED-3ME,Zero,Act/365F,Linear,Flat,Flat
+Curve Name,Value Type,Day Count,Interpolator,Left Extrapolator,Right Extrapolator
+USD-Disc,Zero,Act/365F,Linear,Flat,Flat
+USD-3ML,Forward,Act/365F,Linear,Flat,Flat
+AED-3ME,Zero,Act/365F,Linear,Flat,Flat
+SAR-3MS,Zero,Act/365F,Linear,Flat,Flat

@@ -42,7 +42,8 @@ public class CalibrationBasic {
    * The curve group name.
    */
   //private static final CurveGroupName CURVE_GROUP_NAME = CurveGroupName.of("USD-DSCON-LIBOR3M");
-  private static final CurveGroupName CURVE_GROUP_NAME = CurveGroupName.of("AED-DSCON-EIBOR3M");
+//  private static final CurveGroupName CURVE_GROUP_NAME = CurveGroupName.of("AED-DSCON-EIBOR3M");
+  private static final CurveGroupName CURVE_GROUP_NAME = CurveGroupName.of("SAR-DSCON-SAIBOR3M");
   /**
    * The ibor index name.
    */
@@ -134,7 +135,7 @@ public class CalibrationBasic {
     try (Stream<String> input = publishedTenors.keySet().stream();)
     {
       input.map(s -> marketDataDate.toString() + 
-          ",AED-3ME," + 
+          ",SAR-3MS," + 
           publishedTenors.get(s).addTo(marketDataDate).toString() + 
           "," + 
           String.valueOf(discountFactors.zeroRate((LocalDate)publishedTenors.get(s).addTo(marketDataDate))
@@ -224,7 +225,7 @@ public class CalibrationBasic {
           try (Stream<String> input = publishedTenors.keySet().stream();)
           {
             input.map(s -> date.toString() + 
-                ",AED-3ME," + 
+                ",SAR-3MS," + 
                 publishedTenors.get(s).addTo(date).toString() + 
                 "," + 
 //                String.valueOf(discountFactors.zeroRate(publishedFractions.get(s)) 
