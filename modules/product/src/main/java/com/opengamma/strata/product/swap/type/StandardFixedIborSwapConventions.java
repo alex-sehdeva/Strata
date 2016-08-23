@@ -10,6 +10,7 @@ import static com.opengamma.strata.basics.currency.Currency.CHF;
 import static com.opengamma.strata.basics.currency.Currency.EUR;
 import static com.opengamma.strata.basics.currency.Currency.GBP;
 import static com.opengamma.strata.basics.currency.Currency.JPY;
+import static com.opengamma.strata.basics.currency.Currency.SAR;
 import static com.opengamma.strata.basics.currency.Currency.USD;
 import static com.opengamma.strata.basics.date.BusinessDayConventions.MODIFIED_FOLLOWING;
 import static com.opengamma.strata.basics.date.DayCounts.ACT_360;
@@ -43,6 +44,17 @@ final class StandardFixedIborSwapConventions {
   // GBLO+JPTO calendar
   private static final HolidayCalendarId GBLO_JPTO = GBLO.combinedWith(JPTO);
 
+  /**
+   * AED(UA) vanilla fixed vs EIBOR 3M swap.
+   * The fixed leg pays every 1 year with day count 'Act/360'.
+   */
+  public static final FixedIborSwapConvention SAR_FIXED_1Y_SAIBOR_3M =
+      ImmutableFixedIborSwapConvention.of(
+          "SAR-FIXED-1Y-SAIBOR-3M",
+          FixedRateSwapLegConvention.of(SAR, ACT_360, P12M, BusinessDayAdjustment.of(MODIFIED_FOLLOWING, FRI_SAT)),
+          IborRateSwapLegConvention.of(IborIndices.SAR_SAIBOR_3M));
+  
+  
   /**
    * AED(UA) vanilla fixed vs EIBOR 3M swap.
    * The fixed leg pays every 1 year with day count 'Act/360'.

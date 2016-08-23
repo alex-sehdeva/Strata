@@ -22,6 +22,10 @@ public final class FloatingRateNames {
 
   //-------------------------------------------------------------------------
   /**
+   * Constant for SAR-SAIBOR.
+   */
+  public static final FloatingRateName SAR_SAIBOR = FloatingRateName.of("SAR-SAIBOR");
+  /**
    * Constant for AED-EIBOR.
    */
   public static final FloatingRateName AED_EIBOR = FloatingRateName.of("AED-EIBOR");

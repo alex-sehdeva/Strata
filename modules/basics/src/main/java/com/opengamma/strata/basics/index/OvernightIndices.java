@@ -26,6 +26,18 @@ public final class OvernightIndices {
    * <p>
    * SONIA is an "Overnight" index.
    */
+  public static final OvernightIndex AED_EIBOR = OvernightIndex.of("AED-EIBOR");
+  /**
+   * The SONIA index for GBP.
+   * <p>
+   * SONIA is an "Overnight" index.
+   */
+  public static final OvernightIndex SAR_SAIBOR = OvernightIndex.of("SAR-SAIBOR");
+  /**
+   * The SONIA index for GBP.
+   * <p>
+   * SONIA is an "Overnight" index.
+   */
   public static final OvernightIndex GBP_SONIA = OvernightIndex.of("GBP-SONIA");
   /**
    * The TOIS index for CHF.

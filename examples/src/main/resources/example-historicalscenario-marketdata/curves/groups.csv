@@ -1,5 +1,3 @@
 Group Name,Curve Type,Reference,Curve Name
-Default,Discount,USD,USD-Disc
-Default,Forward,USD-FED-FUND,USD-Disc
-Default,Forward,USD-LIBOR-3M,USD-3ML
-Default,Forward,USD-LIBOR-6M,USD-6ML
+Default,Forward,AED-EIBOR-3M,AED-3ME
+Default,Discount,AED,AED-3ME

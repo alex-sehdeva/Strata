@@ -22,6 +22,24 @@ public final class IborIndices {
 
   //-------------------------------------------------------------------------
   /**
+   * The 3 month EIBOR index for AED.
+   * <p>
+   * The "Emirates Interbank Offered Rate".
+   */
+  public static final IborIndex SAR_SAIBOR_1M = IborIndex.of("SAR-SAIBOR-1M");
+  /**
+   * The 3 month EIBOR index for AED.
+   * <p>
+   * The "Emirates Interbank Offered Rate".
+   */
+  public static final IborIndex SAR_SAIBOR_2M = IborIndex.of("SAR-SAIBOR-2M");
+  /**
+   * The 3 month EIBOR index for AED.
+   * <p>
+   * The "Emirates Interbank Offered Rate".
+   */
+  public static final IborIndex SAR_SAIBOR_3M = IborIndex.of("SAR-SAIBOR-3M");
+  /**
    * The 1 month EIBOR index for AED.
    * <p>
    * The "Emirates Interbank Offered Rate".

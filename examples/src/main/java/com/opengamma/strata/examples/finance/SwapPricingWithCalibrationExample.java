@@ -58,7 +58,7 @@ public class SwapPricingWithCalibrationExample {
   /**
    * The valuation date.
    */
-  private static final LocalDate VAL_DATE = LocalDate.of(2016, 6, 15);
+  private static final LocalDate VAL_DATE = LocalDate.of(2016, 6, 8);
   /**
    * The curve group name.
    */
@@ -184,7 +184,7 @@ public class SwapPricingWithCalibrationExample {
         .id(StandardId.of("example", "1"))
         .addAttribute(TradeAttributeType.DESCRIPTION, "Fixed vs Libor 3m")
         .counterparty(StandardId.of("example", "A"))
-        .settlementDate(LocalDate.of(2016, 6, 15))
+        .settlementDate(LocalDate.of(2016, 6, 8))
         .build();
     return FixedIborSwapConventions.AED_FIXED_1Y_EIBOR_3M.toTrade(
         tradeInfo,
@@ -200,15 +200,15 @@ public class SwapPricingWithCalibrationExample {
         .id(StandardId.of("example", "2"))
         .addAttribute(TradeAttributeType.DESCRIPTION, "Fixed vs Libor 3m")
         .counterparty(StandardId.of("example", "A"))
-        .settlementDate(LocalDate.of(2016, 6, 15))
+        .settlementDate(LocalDate.of(2016, 6, 8))
         .build();
     return FixedIborSwapConventions.AED_FIXED_1Y_EIBOR_3M.toTrade(
         tradeInfo,
-        LocalDate.of(2016, 6, 18), // the start date
-        LocalDate.of(2026, 6, 18), // the end date
-        BuySell.SELL,               // indicates wheter this trade is a buy or sell
-        21_000_000,               // the notional amount  
-        0.03657);                    // the fixed interest rate
+        LocalDate.of(2016, 4, 6), // the start date
+        LocalDate.of(2021, 4, 6), // the end date
+        BuySell.BUY,               // indicates wheter this trade is a buy or sell
+        40_000_000,               // the notional amount  
+        0.0241);                    // the fixed interest rate
   }
   
   private static Trade createVanillaFixedVsLibor3mSwap3() {
@@ -216,7 +216,7 @@ public class SwapPricingWithCalibrationExample {
         .id(StandardId.of("example", "3"))
         .addAttribute(TradeAttributeType.DESCRIPTION, "Fixed vs Libor 3m")
         .counterparty(StandardId.of("example", "A"))
-        .settlementDate(LocalDate.of(2016, 6, 15))
+        .settlementDate(LocalDate.of(2016, 6, 8))
         .build();
     return FixedIborSwapConventions.AED_FIXED_1Y_EIBOR_3M.toTrade(
         tradeInfo,
@@ -232,7 +232,7 @@ public class SwapPricingWithCalibrationExample {
         .id(StandardId.of("example", "4"))
         .addAttribute(TradeAttributeType.DESCRIPTION, "Fixed vs Libor 3m")
         .counterparty(StandardId.of("example", "A"))
-        .settlementDate(LocalDate.of(2016, 6, 15))
+        .settlementDate(LocalDate.of(2016, 6, 8))
         .build();
     return FixedIborSwapConventions.AED_FIXED_1Y_EIBOR_3M.toTrade(
         tradeInfo,
