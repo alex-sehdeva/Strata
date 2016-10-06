@@ -330,6 +330,12 @@ public class MultiCurrencyAmountTest {
     MultiCurrencyAmount base = MultiCurrencyAmount.of(CA1, CA2);
     MultiCurrencyAmount test = base.negated();
     assertMCA(test, CA1.negated(), CA2.negated());
+    assertEquals(
+        MultiCurrencyAmount.of(CurrencyAmount.zero(Currency.USD), CurrencyAmount.zero(Currency.EUR)).negated(),
+        MultiCurrencyAmount.of(CurrencyAmount.zero(Currency.USD), CurrencyAmount.zero(Currency.EUR)));
+    assertEquals(
+        MultiCurrencyAmount.of(CurrencyAmount.of(Currency.USD, -0d), CurrencyAmount.of(Currency.EUR, -0d)).negated(),
+        MultiCurrencyAmount.of(CurrencyAmount.zero(Currency.USD), CurrencyAmount.zero(Currency.EUR)));
   }
 
   //-------------------------------------------------------------------------
@@ -342,6 +348,18 @@ public class MultiCurrencyAmountTest {
   public void test_mapAmounts_null() {
     MultiCurrencyAmount test = MultiCurrencyAmount.of(CA1, CA2);
     assertThrowsIllegalArg(() -> test.mapAmounts(null));
+  }
+
+  //-------------------------------------------------------------------------
+  public void test_mapCurrencyAmounts() {
+    MultiCurrencyAmount base = MultiCurrencyAmount.of(CA1, CA2);
+    MultiCurrencyAmount test = base.mapCurrencyAmounts(a -> CurrencyAmount.of(CCY3, 1));
+    assertMCA(test, CurrencyAmount.of(CCY3, 2));
+  }
+
+  public void test_mapCurrencyAmounts_null() {
+    MultiCurrencyAmount test = MultiCurrencyAmount.of(CA1, CA2);
+    assertThrowsIllegalArg(() -> test.mapCurrencyAmounts(null));
   }
 
   //-------------------------------------------------------------------------
@@ -416,11 +434,13 @@ public class MultiCurrencyAmountTest {
       currencies.add(expectedAmount.getCurrency());
       assertEquals(actual.contains(expectedAmount.getCurrency()), true);
       assertEquals(actual.getAmount(expectedAmount.getCurrency()), expectedAmount);
+      assertEquals(actual.getAmountOrZero(expectedAmount.getCurrency()), expectedAmount);
     }
     assertEquals(actual.getCurrencies(), currencies);
     Currency nonExisting = Currency.of("FRZ");
     assertEquals(actual.contains(nonExisting), false);
     assertThrowsIllegalArg(() -> actual.getAmount(nonExisting));
+    assertEquals(actual.getAmountOrZero(nonExisting), CurrencyAmount.zero(nonExisting));
   }
 
 }

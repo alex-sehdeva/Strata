@@ -8,7 +8,7 @@
   <parent>
     <groupId>com.opengamma.strata</groupId>
     <artifactId>strata-parent</artifactId>
-    <version>0.17.0-SNAPSHOT</version>
+    <version>1.1.0-SNAPSHOT</version>
     <relativePath>../modules</relativePath>
   </parent>  
   <artifactId>strata-examples</artifactId>
@@ -70,7 +70,7 @@
     <profile>
       <id>build-report-tool</id>
       <activation>
-        <property><name>!env.CI</name></property>
+        <property><name>dist</name></property>
       </activation>
       <build>
         <plugins>
@@ -102,6 +102,8 @@
                   <goal>single</goal>
                 </goals>
                 <configuration>
+                  <finalName>strata-report-tool-${project.version}</finalName>
+                  <appendAssemblyId>false</appendAssemblyId>
                   <descriptors>
                     <descriptor>src/assembly/report-tool-dist.xml</descriptor>
                   </descriptors>

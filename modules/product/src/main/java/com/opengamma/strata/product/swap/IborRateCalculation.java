@@ -47,6 +47,7 @@ import com.opengamma.strata.basics.index.Index;
 import com.opengamma.strata.basics.schedule.Schedule;
 import com.opengamma.strata.basics.schedule.SchedulePeriod;
 import com.opengamma.strata.basics.value.ValueSchedule;
+import com.opengamma.strata.collect.array.DoubleArray;
 import com.opengamma.strata.product.rate.FixedRateComputation;
 import com.opengamma.strata.product.rate.IborAveragedFixing;
 import com.opengamma.strata.product.rate.IborAveragedRateComputation;
@@ -285,8 +286,8 @@ public final class IborRateCalculation
           .createAccrualPeriods(accrualSchedule, paymentSchedule, refData);
     }
     // resolve data by schedule
-    List<Double> resolvedGearings = firstNonNull(gearing, ALWAYS_1).resolveValues(accrualSchedule.getPeriods());
-    List<Double> resolvedSpreads = firstNonNull(spread, ALWAYS_0).resolveValues(accrualSchedule.getPeriods());
+    DoubleArray resolvedGearings = firstNonNull(gearing, ALWAYS_1).resolveValues(accrualSchedule);
+    DoubleArray resolvedSpreads = firstNonNull(spread, ALWAYS_0).resolveValues(accrualSchedule);
     // resolve against reference data once
     DateAdjuster fixingDateAdjuster = fixingDateOffset.resolve(refData);
     Function<SchedulePeriod, Schedule> resetScheduleFn =
@@ -298,13 +299,9 @@ public final class IborRateCalculation
       SchedulePeriod period = accrualSchedule.getPeriod(i);
       RateComputation rateComputation = createRateComputation(
           period, fixingDateAdjuster, resetScheduleFn, iborObservationFn, i, scheduleInitialStub, scheduleFinalStub, refData);
-      accrualPeriods.add(RateAccrualPeriod.builder(period)
-          .yearFraction(period.yearFraction(dayCount, accrualSchedule))
-          .rateComputation(rateComputation)
-          .negativeRateMethod(negativeRateMethod)
-          .gearing(resolvedGearings.get(i))
-          .spread(resolvedSpreads.get(i))
-          .build());
+      double yearFraction = period.yearFraction(dayCount, accrualSchedule);
+      accrualPeriods.add(new RateAccrualPeriod(
+          period, yearFraction, rateComputation, resolvedGearings.get(i), resolvedSpreads.get(i), negativeRateMethod));
     }
     return accrualPeriods.build();
   }

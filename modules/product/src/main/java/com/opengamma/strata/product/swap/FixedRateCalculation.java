@@ -8,7 +8,6 @@ package com.opengamma.strata.product.swap;
 import static com.google.common.base.MoreObjects.firstNonNull;
 
 import java.io.Serializable;
-import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Optional;
@@ -34,7 +33,9 @@ import com.opengamma.strata.basics.index.Index;
 import com.opengamma.strata.basics.schedule.Schedule;
 import com.opengamma.strata.basics.schedule.SchedulePeriod;
 import com.opengamma.strata.basics.value.ValueSchedule;
+import com.opengamma.strata.collect.array.DoubleArray;
 import com.opengamma.strata.product.rate.FixedRateComputation;
+import com.opengamma.strata.product.rate.RateComputation;
 
 /**
  * Defines the calculation of a fixed rate swap leg.
@@ -124,28 +125,22 @@ public final class FixedRateCalculation
     Optional<SchedulePeriod> scheduleInitialStub = accrualSchedule.getInitialStub();
     Optional<SchedulePeriod> scheduleFinalStub = accrualSchedule.getFinalStub();
     // resolve data by schedule
-    List<Double> resolvedRates = rate.resolveValues(accrualSchedule.getPeriods());
+    DoubleArray resolvedRates = rate.resolveValues(accrualSchedule);
     // build accrual periods
     ImmutableList.Builder<RateAccrualPeriod> accrualPeriods = ImmutableList.builder();
     for (int i = 0; i < accrualSchedule.size(); i++) {
       SchedulePeriod period = accrualSchedule.getPeriod(i);
+      double yearFraction = period.yearFraction(dayCount, accrualSchedule);
       // handle stubs
+      RateComputation rateComputation;
       if (scheduleInitialStub.isPresent() && scheduleInitialStub.get() == period) {
-        accrualPeriods.add(RateAccrualPeriod.builder(period)
-            .yearFraction(period.yearFraction(dayCount, accrualSchedule))
-            .rateComputation(initialStub.createRateComputation(resolvedRates.get(i)))
-            .build());
+        rateComputation = initialStub.createRateComputation(resolvedRates.get(i));
       } else if (scheduleFinalStub.isPresent() && scheduleFinalStub.get() == period) {
-        accrualPeriods.add(RateAccrualPeriod.builder(period)
-            .yearFraction(period.yearFraction(dayCount, accrualSchedule))
-            .rateComputation(finalStub.createRateComputation(resolvedRates.get(i)))
-            .build());
+        rateComputation = finalStub.createRateComputation(resolvedRates.get(i));
       } else {
-        accrualPeriods.add(RateAccrualPeriod.builder(period)
-            .yearFraction(period.yearFraction(dayCount, accrualSchedule))
-            .rateComputation(FixedRateComputation.of(resolvedRates.get(i)))
-            .build());
+        rateComputation = FixedRateComputation.of(resolvedRates.get(i));
       }
+      accrualPeriods.add(new RateAccrualPeriod(period, yearFraction, rateComputation));
     }
     return accrualPeriods.build();
   }

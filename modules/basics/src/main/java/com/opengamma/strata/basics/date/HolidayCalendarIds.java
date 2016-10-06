@@ -116,12 +116,43 @@ public final class HolidayCalendarIds {
    * This constant references the calendar for Tokyo bank holidays.
    */
   public static final HolidayCalendarId JPTO = HolidayCalendarId.of("JPTO");
+
   /**
    * An identifier for the holiday calendar of Sydney, Australia, with code 'AUSY'.
    * <p>
    * This constant references the calendar for Sydney bank holidays.
    */
   public static final HolidayCalendarId AUSY = HolidayCalendarId.of("AUSY");
+  /**
+   * An identifier for the holiday calendar of Toronto, Canada, with code 'CATO'.
+   * <p>
+   * This constant references the calendar for Toronto bank holidays.
+   */
+  public static final HolidayCalendarId CATO = HolidayCalendarId.of("CATO");
+  /**
+   * An identifier for the holiday calendar of Copenhagen, Denmark, with code 'DKCO'.
+   * <p>
+   * This constant references the calendar for Copenhagen bank holidays.
+   */
+  public static final HolidayCalendarId DKCO = HolidayCalendarId.of("DKCO");
+  /**
+   * An identifier for the holiday calendar of Oslo, Norway, with code 'NOOS'.
+   * <p>
+   * This constant references the calendar for Oslo bank holidays.
+   */
+  public static final HolidayCalendarId NOOS = HolidayCalendarId.of("NOOS");
+  /**
+   * An identifier for the holiday calendar of Warsaw, Poland, with code 'PLWA'.
+   * <p>
+   * This constant references the calendar for Warsaw bank holidays.
+   */
+  public static final HolidayCalendarId PLWA = HolidayCalendarId.of("PLWA");
+  /**
+   * An identifier for the holiday calendar of Stockholm, Sweden, with code 'SEST'.
+   * <p>
+   * This constant references the calendar for Stockholm bank holidays.
+   */
+  public static final HolidayCalendarId SEST = HolidayCalendarId.of("SEST");
 
   //-------------------------------------------------------------------------
   /**

@@ -171,7 +171,7 @@ public class RatesCurvesCsvLoaderTest {
   }
 
   @Test(expectedExceptions = IllegalArgumentException.class,
-      expectedExceptionsMessageRegExp = "Multiple curves with the same name: .*")
+      expectedExceptionsMessageRegExp = "Rates curve loader found multiple curves with the same name: .*")
   public void test_single_curve_multiple_Files() {
     RatesCurvesCsvLoader.load(
         CURVE_DATE,
@@ -222,7 +222,6 @@ public class RatesCurvesCsvLoaderTest {
     List<CurveGroup> curves3 = allGroups.get(CURVE_DATE_CURVES_3);
     assertEquals(curves3.size(), 1);
     CurveGroup group = curves3.get(0);
-
 
     // All curve points are set to 0 in test data to ensure these are really different curve instances
     Curve usdDisc = group.findDiscountCurve(Currency.USD).get();
@@ -338,6 +337,50 @@ public class RatesCurvesCsvLoaderTest {
   }
 
   //-------------------------------------------------------------------------
+  public void test_writer_curve_settings() {
+    List<CurveGroup> curveGroups = RatesCurvesCsvLoader.load(
+        CURVE_DATE,
+        ResourceLocator.of(GROUPS_1),
+        ResourceLocator.of(SETTINGS_1),
+        ImmutableList.of(ResourceLocator.of(CURVES_1), ResourceLocator.of(CURVES_2)));
+    Appendable underlying = new StringBuilder();
+    RatesCurvesCsvLoader.writeCurveSettings(underlying, curveGroups.get(0));
+    String created = underlying.toString();
+    String expected =
+        "Curve Name,Value Type,Day Count,Interpolator,Left Extrapolator,Right Extrapolator" + System.lineSeparator() +
+            "USD-Disc,zero,Act/Act ISDA,Linear,Flat,Flat" + System.lineSeparator() +
+            "USD-3ML,zero,Act/Act ISDA,Linear,Flat,Flat" + System.lineSeparator();
+    assertEquals(created, expected);
+  }
+
+  public void test_writer_curve_nodes() {
+    List<CurveGroup> curveGroups = RatesCurvesCsvLoader.load(
+        CURVE_DATE,
+        ResourceLocator.of(GROUPS_1),
+        ResourceLocator.of(SETTINGS_1),
+        ImmutableList.of(ResourceLocator.of(CURVES_1), ResourceLocator.of(CURVES_2)));
+    Appendable underlying = new StringBuilder();
+    RatesCurvesCsvLoader.writeCurveNodes(underlying, CURVE_DATE, curveGroups.get(0));
+    String created = underlying.toString();
+    String expected =
+        "Valuation Date,Curve Name,Date,Value,Label" + System.lineSeparator() +
+            "2009-07-31,USD-Disc,2009-11-06,0.001763775,3M" + System.lineSeparator() +
+            "2009-07-31,USD-Disc,2010-02-08,0.002187884,6M" + System.lineSeparator() +
+            "2009-07-31,USD-Disc,2010-08-06,0.004437206,1Y" + System.lineSeparator() +
+            "2009-07-31,USD-Disc,2011-08-08,0.011476741,2Y" + System.lineSeparator() +
+            "2009-07-31,USD-Disc,2012-08-08,0.017859057,3Y" + System.lineSeparator() +
+            "2009-07-31,USD-Disc,2014-08-06,0.026257102,5Y" + System.lineSeparator() +
+            "2009-07-31,USD-Disc,2019-08-07,0.035521988,10Y" + System.lineSeparator() +
+            "2009-07-31,USD-3ML,2009-11-04,0.007596889,3M" + System.lineSeparator() +
+            "2009-07-31,USD-3ML,2010-08-04,0.008091541,1Y" + System.lineSeparator() +
+            "2009-07-31,USD-3ML,2011-08-04,0.015244398,2Y" + System.lineSeparator() +
+            "2009-07-31,USD-3ML,2012-08-06,0.021598026,3Y" + System.lineSeparator() +
+            "2009-07-31,USD-3ML,2014-08-05,0.029984216,5Y" + System.lineSeparator() +
+            "2009-07-31,USD-3ML,2019-08-06,0.039245812,10Y" + System.lineSeparator();
+    assertEquals(created, expected);
+  }
+
+  //-------------------------------------------------------------------------
   public void coverage() {
     coverPrivateConstructor(RatesCurvesCsvLoader.class);
     LoadedCurveKey.meta();
@@ -346,10 +389,10 @@ public class RatesCurvesCsvLoaderTest {
     coverImmutableBean(LoadedCurveNode.of(CURVE_DATE, 1d, "Test"));
     LoadedCurveSettings.meta();
     LoadedCurveSettings settings1 = LoadedCurveSettings.of(
-        CurveName.of("Test"), ValueType.ZERO_RATE, DayCounts.ACT_365F,
+        CurveName.of("Test"), ValueType.YEAR_FRACTION, ValueType.ZERO_RATE, DayCounts.ACT_365F,
         CurveInterpolators.LINEAR, CurveExtrapolators.FLAT, CurveExtrapolators.FLAT);
     LoadedCurveSettings settings2 = LoadedCurveSettings.of(
-        CurveName.of("Test2"), ValueType.DISCOUNT_FACTOR, DayCounts.ACT_ACT_ISDA,
+        CurveName.of("Test2"), ValueType.YEAR_FRACTION, ValueType.DISCOUNT_FACTOR, DayCounts.ACT_ACT_ISDA,
         CurveInterpolators.LOG_LINEAR, CurveExtrapolators.LINEAR, CurveExtrapolators.LINEAR);
     coverImmutableBean(settings1);
     coverBeanEquals(settings1, settings2);

@@ -67,7 +67,7 @@ public class DiscountingFixedCouponBondProductPricerTest {
   private static final StandardId SECURITY_ID = StandardId.of("OG-Ticker", "GOVT1-BOND1");
   private static final StandardId ISSUER_ID = StandardId.of("OG-Ticker", "GOVT1");
   private static final LocalDate VAL_DATE = date(2016, 4, 25);
-  private static final FixedCouponBondYieldConvention YIELD_CONVENTION = FixedCouponBondYieldConvention.GERMAN_BONDS;
+  private static final FixedCouponBondYieldConvention YIELD_CONVENTION = FixedCouponBondYieldConvention.DE_BONDS;
   private static final double NOTIONAL = 1.0e7;
   private static final double FIXED_RATE = 0.015;
   private static final HolidayCalendarId EUR_CALENDAR = HolidayCalendarIds.EUTA;
@@ -115,20 +115,20 @@ public class DiscountingFixedCouponBondProductPricerTest {
   private static final InterpolatedNodalCurve CURVE_REPO = InterpolatedNodalCurve.of(
       METADATA_REPO, DoubleArray.of(0.1, 2.0, 10.0), DoubleArray.of(0.05, 0.06, 0.09), INTERPOLATOR);
   private static final DiscountFactors DSC_FACTORS_REPO = ZeroRateDiscountFactors.of(EUR, VAL_DATE, CURVE_REPO);
-  private static final BondGroup GROUP_REPO = BondGroup.of("GOVT1 BOND1");
+  private static final RepoGroup GROUP_REPO = RepoGroup.of("GOVT1 BOND1");
   private static final CurveName NAME_ISSUER = CurveName.of("TestIssuerCurve");
   private static final CurveMetadata METADATA_ISSUER = Curves.zeroRates(NAME_ISSUER, ACT_365F);
   private static final InterpolatedNodalCurve CURVE_ISSUER = InterpolatedNodalCurve.of(
       METADATA_ISSUER, DoubleArray.of(0.2, 9.0, 15.0), DoubleArray.of(0.03, 0.05, 0.13), INTERPOLATOR);
   private static final DiscountFactors DSC_FACTORS_ISSUER = ZeroRateDiscountFactors.of(EUR, VAL_DATE, CURVE_ISSUER);
   private static final LegalEntityGroup GROUP_ISSUER = LegalEntityGroup.of("GOVT1");
-  private static final LegalEntityDiscountingProvider PROVIDER = LegalEntityDiscountingProvider.builder()
+  private static final LegalEntityDiscountingProvider PROVIDER = ImmutableLegalEntityDiscountingProvider.builder()
       .issuerCurves(ImmutableMap.<Pair<LegalEntityGroup, Currency>, DiscountFactors>of(
           Pair.<LegalEntityGroup, Currency>of(GROUP_ISSUER, EUR), DSC_FACTORS_ISSUER))
-      .legalEntityMap(ImmutableMap.<StandardId, LegalEntityGroup>of(ISSUER_ID, GROUP_ISSUER))
-      .repoCurves(ImmutableMap.<Pair<BondGroup, Currency>, DiscountFactors>of(
-          Pair.<BondGroup, Currency>of(GROUP_REPO, EUR), DSC_FACTORS_REPO))
-      .bondMap(ImmutableMap.<StandardId, BondGroup>of(SECURITY_ID, GROUP_REPO))
+      .issuerCurveGroups(ImmutableMap.<StandardId, LegalEntityGroup>of(ISSUER_ID, GROUP_ISSUER))
+      .repoCurves(ImmutableMap.<Pair<RepoGroup, Currency>, DiscountFactors>of(
+          Pair.<RepoGroup, Currency>of(GROUP_REPO, EUR), DSC_FACTORS_REPO))
+      .repoCurveGroups(ImmutableMap.<StandardId, RepoGroup>of(SECURITY_ID, GROUP_REPO))
       .valuationDate(VAL_DATE)
       .build();
 
@@ -514,7 +514,7 @@ public class DiscountingFixedCouponBondProductPricerTest {
       .notional(100)
       .accrualSchedule(SCHEDULE_UK)
       .settlementDateOffset(DaysAdjustment.ofBusinessDays(1, SAT_SUN))
-      .yieldConvention(FixedCouponBondYieldConvention.UK_BUMP_DMO)
+      .yieldConvention(FixedCouponBondYieldConvention.GB_BUMP_DMO)
       .exCouponPeriod(DaysAdjustment.ofCalendarDays(-7,
           BusinessDayAdjustment.of(BusinessDayConventions.PRECEDING, SAT_SUN)))
       .build()
@@ -600,7 +600,7 @@ public class DiscountingFixedCouponBondProductPricerTest {
       .notional(100)
       .accrualSchedule(SCHEDULE_GER)
       .settlementDateOffset(DaysAdjustment.ofBusinessDays(3, SAT_SUN))
-      .yieldConvention(FixedCouponBondYieldConvention.GERMAN_BONDS)
+      .yieldConvention(FixedCouponBondYieldConvention.DE_BONDS)
       .exCouponPeriod(DaysAdjustment.NONE)
       .build()
       .resolve(REF_DATA);
@@ -686,7 +686,7 @@ public class DiscountingFixedCouponBondProductPricerTest {
       .notional(100)
       .accrualSchedule(SCHEDULE_JP)
       .settlementDateOffset(DaysAdjustment.ofBusinessDays(3, JPTO))
-      .yieldConvention(FixedCouponBondYieldConvention.JAPAN_SIMPLE)
+      .yieldConvention(FixedCouponBondYieldConvention.JP_SIMPLE)
       .exCouponPeriod(DaysAdjustment.NONE)
       .build()
       .resolve(REF_DATA);
@@ -771,7 +771,7 @@ public class DiscountingFixedCouponBondProductPricerTest {
 
   public void macaulayDurationFromYieldYieldJP() {
     assertThrows(() -> PRICER.macaulayDurationFromYield(PRODUCT_JP, SETTLEMENT_JP, YIELD_JP),
-        UnsupportedOperationException.class, "The convention JAPAN_SIMPLE is not supported.");
+        UnsupportedOperationException.class, "The convention JP_SIMPLE is not supported.");
   }
 
 }

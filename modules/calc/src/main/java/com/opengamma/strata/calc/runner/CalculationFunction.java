@@ -6,6 +6,7 @@
 package com.opengamma.strata.calc.runner;
 
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 
 import com.opengamma.strata.basics.CalculationTarget;
@@ -62,6 +63,22 @@ public interface CalculationFunction<T extends CalculationTarget> {
   public abstract Set<Measure> supportedMeasures();
 
   /**
+   * Returns an identifier that should uniquely identify the specified target.
+   * <p>
+   * This identifier is used in error messages to identify the target.
+   * This should normally be overridden to provide a suitable identifier.
+   * For example, if the target is a trade, there will typically be a trade identifier available.
+   * <p>
+   * This method must not throw an exception.
+   *
+   * @param target  the target of the calculation
+   * @return the identifier of the target, empty if no suitable identifier available
+   */
+  public default Optional<String> identifier(T target) {
+    return Optional.empty();
+  }
+
+  /**
    * Returns the "natural" currency for the specified target.
    * <p>
    * This is the currency to which currency amounts are converted if the "natural"
@@ -86,6 +103,8 @@ public interface CalculationFunction<T extends CalculationTarget> {
    * Determines the market data required by this function to perform its calculations.
    * <p>
    * Any market data needed by the {@code calculate} method should be specified.
+   * <p>
+   * The set of measures may include measures that are not supported by this function.
    *
    * @param target  the target of the calculation
    * @param measures  the set of measures to be calculated

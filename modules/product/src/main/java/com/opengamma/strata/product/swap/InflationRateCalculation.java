@@ -12,7 +12,6 @@ import java.io.Serializable;
 import java.time.LocalDate;
 import java.time.Period;
 import java.time.YearMonth;
-import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Optional;
@@ -44,6 +43,7 @@ import com.opengamma.strata.basics.schedule.Schedule;
 import com.opengamma.strata.basics.schedule.SchedulePeriod;
 import com.opengamma.strata.basics.value.ValueSchedule;
 import com.opengamma.strata.collect.ArgChecker;
+import com.opengamma.strata.collect.array.DoubleArray;
 import com.opengamma.strata.product.rate.InflationEndInterpolatedRateComputation;
 import com.opengamma.strata.product.rate.InflationEndMonthRateComputation;
 import com.opengamma.strata.product.rate.InflationInterpolatedRateComputation;
@@ -208,16 +208,14 @@ public final class InflationRateCalculation
       ReferenceData refData) {
 
     // resolve data by schedule
-    List<Double> resolvedGearings = firstNonNull(gearing, ALWAYS_1).resolveValues(accrualSchedule.getPeriods());
+    DoubleArray resolvedGearings = firstNonNull(gearing, ALWAYS_1).resolveValues(accrualSchedule);
     // build accrual periods
     ImmutableList.Builder<RateAccrualPeriod> accrualPeriods = ImmutableList.builder();
     for (int i = 0; i < accrualSchedule.size(); i++) {
       SchedulePeriod period = accrualSchedule.getPeriod(i);
-      accrualPeriods.add(RateAccrualPeriod.builder(period)
-          .yearFraction(1d)  // inflation does not use a day count
-          .rateComputation(createRateComputation(period, i))
-          .gearing(resolvedGearings.get(i))
-          .build());
+      // inflation does not use a day count, so year fraction is 1d
+      accrualPeriods.add(new RateAccrualPeriod(
+          period, 1d, createRateComputation(period, i), resolvedGearings.get(i), 0d, NegativeRateMethod.ALLOW_NEGATIVE));
     }
     return accrualPeriods.build();
   }

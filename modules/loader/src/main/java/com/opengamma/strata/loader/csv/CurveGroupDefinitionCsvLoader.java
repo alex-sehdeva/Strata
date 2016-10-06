@@ -8,28 +8,42 @@ package com.opengamma.strata.loader.csv;
 import static com.opengamma.strata.collect.Guavate.toImmutableList;
 import static java.util.stream.Collectors.groupingBy;
 
-import java.util.HashMap;
-import java.util.HashSet;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStreamWriter;
+import java.io.UncheckedIOException;
+import java.io.Writer;
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 
-import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.LinkedHashMultimap;
 import com.google.common.collect.Multimap;
+import com.google.common.io.CharSource;
 import com.opengamma.strata.basics.currency.Currency;
 import com.opengamma.strata.basics.index.Index;
 import com.opengamma.strata.collect.MapStream;
 import com.opengamma.strata.collect.Messages;
 import com.opengamma.strata.collect.io.CsvFile;
+import com.opengamma.strata.collect.io.CsvOutput;
 import com.opengamma.strata.collect.io.CsvRow;
 import com.opengamma.strata.collect.io.ResourceLocator;
 import com.opengamma.strata.loader.LoaderUtils;
+import com.opengamma.strata.market.curve.Curve;
+import com.opengamma.strata.market.curve.CurveGroup;
 import com.opengamma.strata.market.curve.CurveGroupDefinition;
 import com.opengamma.strata.market.curve.CurveGroupEntry;
 import com.opengamma.strata.market.curve.CurveGroupName;
 import com.opengamma.strata.market.curve.CurveName;
+import com.opengamma.strata.market.curve.NodalCurveDefinition;
 
 /**
  * Loads a set of curve group definitions into memory by reading from CSV resources.
@@ -53,6 +67,8 @@ public final class CurveGroupDefinitionCsvLoader {
   private static final String GROUPS_CURVE_TYPE = "Curve Type";
   private static final String GROUPS_REFERENCE = "Reference";
   private static final String GROUPS_CURVE_NAME = "Curve Name";
+  private static final ImmutableList<String> HEADERS = ImmutableList.of(
+      GROUPS_NAME, GROUPS_CURVE_TYPE, GROUPS_REFERENCE, GROUPS_CURVE_NAME);
 
   /** Name used in the reference column of the CSV file for discount curves. */
   private static final String DISCOUNT = "discount";
@@ -60,31 +76,61 @@ public final class CurveGroupDefinitionCsvLoader {
   /** Name used in the reference column of the CSV file for forward curves. */
   private static final String FORWARD = "forward";
 
+  //-------------------------------------------------------------------------
   /**
    * Loads the curve groups definition CSV file.
+   * <p>
+   * The list of {@link NodalCurveDefinition} will be empty in the resulting definition.
    *
    * @param groupsResource  the curve groups CSV resource
-   * @return the set of IDs specifying how each curve is used, keyed by the name of the curve
+   * @return the list of definitions
+   * @deprecated Use better named {@link #loadCurveGroupDefinitions(ResourceLocator)}
    */
+  @Deprecated
   public static List<CurveGroupDefinition> loadCurveGroups(ResourceLocator groupsResource) {
-    Map<CurveName, Set<GroupAndReference>> curveGroups = new HashMap<>();
-    CsvFile csv = CsvFile.of(groupsResource.getCharSource(), true);
+    return loadCurveGroupDefinitions(groupsResource);
+  }
+
+  /**
+   * Loads the curve groups definition CSV file.
+   * <p>
+   * The list of {@link NodalCurveDefinition} will be empty in the resulting definition.
+   *
+   * @param groupsResource  the curve groups CSV resource
+   * @return the list of definitions
+   */
+  public static List<CurveGroupDefinition> loadCurveGroupDefinitions(ResourceLocator groupsResource) {
+    return parseCurveGroupDefinitions(groupsResource.getCharSource());
+  }
+
+  //-------------------------------------------------------------------------
+  /**
+   * Parses the curve groups definition CSV file.
+   * <p>
+   * The list of {@link NodalCurveDefinition} will be empty in the resulting definition.
+   *
+   * @param groupsCharSource  the curve groups CSV character source
+   * @return the list of definitions
+   */
+  public static List<CurveGroupDefinition> parseCurveGroupDefinitions(CharSource groupsCharSource) {
+    Map<CurveName, Set<GroupAndReference>> curveGroups = new LinkedHashMap<>();
+    CsvFile csv = CsvFile.of(groupsCharSource, true);
     for (CsvRow row : csv.rows()) {
       String curveGroupStr = row.getField(GROUPS_NAME);
       String curveTypeStr = row.getField(GROUPS_CURVE_TYPE);
       String referenceStr = row.getField(GROUPS_REFERENCE);
       String curveNameStr = row.getField(GROUPS_CURVE_NAME);
 
-      GroupAndReference gar = createCurveId(CurveGroupName.of(curveGroupStr), curveTypeStr, referenceStr);
+      GroupAndReference gar = createKey(CurveGroupName.of(curveGroupStr), curveTypeStr, referenceStr);
       CurveName curveName = CurveName.of(curveNameStr);
-      Set<GroupAndReference> curveUses = curveGroups.computeIfAbsent(curveName, k -> new HashSet<>());
-      curveUses.add(gar);
+      curveGroups.computeIfAbsent(curveName, k -> new LinkedHashSet<>()).add(gar);
     }
     return buildCurveGroups(curveGroups);
   }
 
+  //-------------------------------------------------------------------------
   // parses the identifier
-  private static GroupAndReference createCurveId(
+  private static GroupAndReference createKey(
       CurveGroupName curveGroup,
       String curveTypeStr,
       String referenceStr) {
@@ -104,18 +150,18 @@ public final class CurveGroupDefinitionCsvLoader {
   }
 
   /**
-   * Builds a list of curve group definitions from the map of curves and their IDs.
+   * Builds a list of curve group definitions from the map of curves and their keys.
    * <p>
-   * The curve IDs specify which curve groups each curve belongs to and how it is used in the group, for example
+   * The keys specify which curve groups each curve belongs to and how it is used in the group, for example
    * as a discount curve for a particular currency or as a forward curve for an index.
    *
-   * @param garMap  the map of group-reference pairs
+   * @param garMap  the map of name to keys
    * @return a map of curve group name to curve group definition built from the curves
    */
   private static ImmutableList<CurveGroupDefinition> buildCurveGroups(
       Map<CurveName, Set<GroupAndReference>> garMap) {
 
-    Multimap<CurveGroupName, CurveGroupEntry> groups = HashMultimap.create();
+    Multimap<CurveGroupName, CurveGroupEntry> groups = LinkedHashMultimap.create();
 
     for (Map.Entry<CurveName, Set<GroupAndReference>> entry : garMap.entrySet()) {
       CurveName curveName = entry.getKey();
@@ -135,15 +181,15 @@ public final class CurveGroupDefinitionCsvLoader {
   }
 
   /**
-   * Creates a curve group entry for a curve from a list of the curve's IDs from the same curve group.
+   * Creates a curve group entry for a curve from a list of keys from the same curve group.
    *
    * @param curveName  the name of the curve
    * @param gars  the group-reference pairs
    * @return a curve group entry built from the data in the IDs
    */
   private static CurveGroupEntry curveGroupEntry(CurveName curveName, List<GroupAndReference> gars) {
-    Set<Currency> currencies = new HashSet<>();
-    Set<Index> indices = new HashSet<>();
+    Set<Currency> currencies = new LinkedHashSet<>();
+    Set<Index> indices = new LinkedHashSet<>();
 
     for (GroupAndReference gar : gars) {
       if (gar.currency != null) {
@@ -159,6 +205,101 @@ public final class CurveGroupDefinitionCsvLoader {
         .build();
   }
 
+  //-------------------------------------------------------------------------
+  /**
+   * Writes the curve groups definition in a CSV format to a file.
+   * 
+   * @param file  the destination for the CSV, such as a file
+   * @param groups  the curve groups
+   */
+  public static void writeCurveGroupDefinition(File file, CurveGroupDefinition... groups) {
+    try (Writer writer = new OutputStreamWriter(new FileOutputStream(file), StandardCharsets.UTF_8)) {
+      writeCurveGroupDefinition(writer, groups);
+    } catch (IOException ex) {
+      throw new UncheckedIOException(ex);
+    }
+  }
+
+  /**
+   * Writes the curve groups definition in a CSV format to an appendable.
+   * 
+   * @param underlying  the underlying appendable destination
+   * @param groups  the curve groups
+   */
+  public static void writeCurveGroupDefinition(Appendable underlying, CurveGroupDefinition... groups) {
+    CsvOutput csv = new CsvOutput(underlying);
+    csv.writeLine(HEADERS);
+    for (CurveGroupDefinition group : groups) {
+      writeCurveGroupDefinition(csv, group);
+    }
+  }
+
+  // write a single group definition to CSV
+  private static void writeCurveGroupDefinition(CsvOutput csv, CurveGroupDefinition group) {
+    String groupName = group.getName().getName();
+    for (CurveGroupEntry entry : group.getEntries()) {
+      for (Currency currency : entry.getDiscountCurrencies()) {
+        csv.writeLine(ImmutableList.of(groupName, DISCOUNT, currency.toString(), entry.getCurveName().getName()));
+      }
+      for (Index index : entry.getIndices()) {
+        csv.writeLine(ImmutableList.of(groupName, FORWARD, index.toString(), entry.getCurveName().getName()));
+      }
+    }
+  }
+
+  //-------------------------------------------------------------------------
+  /**
+   * Writes the curve group in a CSV format to a file.
+   * 
+   * @param file  the file
+   * @param groups  the curve groups
+   */
+  public static void writeCurveGroup(File file, CurveGroup... groups) {
+    try (Writer writer = new OutputStreamWriter(new FileOutputStream(file), StandardCharsets.UTF_8)) {
+      writeCurveGroup(writer, groups);
+    } catch (IOException ex) {
+      throw new UncheckedIOException(ex);
+    }
+  }
+
+  /**
+   * Writes the curve group in a CSV format to an appendable.
+   * 
+   * @param underlying  the underlying appendable destination
+   * @param groups  the curve groups
+   */
+  public static void writeCurveGroup(Appendable underlying, CurveGroup... groups) {
+    CsvOutput csv = new CsvOutput(underlying);
+    csv.writeLine(HEADERS);
+    for (CurveGroup group : groups) {
+      writeCurveGroup(csv, group);
+    }
+  }
+
+  // write a single group to CSV
+  private static void writeCurveGroup(CsvOutput csv, CurveGroup group) {
+    String groupName = group.getName().getName();
+    Map<Currency, Curve> discountingCurves = group.getDiscountCurves();
+    for (Entry<Currency, Curve> entry : discountingCurves.entrySet()) {
+      List<String> line = new ArrayList<>(4);
+      line.add(groupName);
+      line.add(DISCOUNT);
+      line.add(entry.getKey().toString());
+      line.add(entry.getValue().getName().getName());
+      csv.writeLine(line);
+    }
+    Map<Index, Curve> forwardCurves = group.getForwardCurves();
+    for (Entry<Index, Curve> entry : forwardCurves.entrySet()) {
+      List<String> line = new ArrayList<>(4);
+      line.add(groupName);
+      line.add(FORWARD);
+      line.add(entry.getKey().toString());
+      line.add(entry.getValue().getName().getName());
+      csv.writeLine(line);
+    }
+  }
+
+  //-------------------------------------------------------------------------
   // This class only has static methods
   private CurveGroupDefinitionCsvLoader() {
   }
