@@ -8,10 +8,12 @@ package com.opengamma.strata.product.swap.type;
 import static com.opengamma.strata.basics.date.BusinessDayConventions.MODIFIED_FOLLOWING;
 import static com.opengamma.strata.basics.date.DayCounts.ACT_360;
 import static com.opengamma.strata.basics.date.DayCounts.ACT_365F;
+import static com.opengamma.strata.basics.index.OvernightIndices.CLP_CAMARA;
 import static com.opengamma.strata.basics.index.OvernightIndices.EUR_EONIA;
 import static com.opengamma.strata.basics.index.OvernightIndices.GBP_SONIA;
 import static com.opengamma.strata.basics.index.OvernightIndices.JPY_TONAR;
 import static com.opengamma.strata.basics.index.OvernightIndices.USD_FED_FUND;
+import static com.opengamma.strata.basics.schedule.Frequency.P6M;
 import static com.opengamma.strata.basics.schedule.Frequency.P12M;
 import static com.opengamma.strata.basics.schedule.Frequency.TERM;
 import static com.opengamma.strata.product.swap.OvernightAccrualMethod.COMPOUNDED;
@@ -105,6 +107,15 @@ final class StandardFixedOvernightSwapConventions {
    */
   public static final FixedOvernightSwapConvention JPY_FIXED_1Y_TONAR_OIS =
       makeConvention("JPY-FIXED-1Y-TONAR-OIS", JPY_TONAR, ACT_365F, P12M, 0, 2);
+
+  /**
+   * CLP fixed vs CAMARA OIS swap for all terms.
+   * <p>
+   * Both legs pay semi-annually and use day count 'Act/360'.
+   * The spot date offset is 2 days and there is no payment date offset.
+   */
+  public static final FixedOvernightSwapConvention CLP_FIXED_6M_CAMARA_OIS =
+      makeConvention("CLP-FIXED-6M-CAMARA-OIS", CLP_CAMARA, ACT_360, P6M, 0, 2);
 
   //-------------------------------------------------------------------------
   // build conventions

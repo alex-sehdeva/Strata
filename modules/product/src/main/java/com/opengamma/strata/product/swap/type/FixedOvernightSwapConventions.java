@@ -103,6 +103,16 @@ public final class FixedOvernightSwapConventions {
   public static final FixedOvernightSwapConvention JPY_FIXED_1Y_TONAR_OIS =
       FixedOvernightSwapConvention.of(StandardFixedOvernightSwapConventions.JPY_FIXED_1Y_TONAR_OIS.getName());
 
+  /**
+   * The 'CLP-FIXED-6M-CAMARA-OIS' swap convention.
+   * <p>
+   * JPY fixed vs TONAR OIS swap for terms greater than one year.
+   * Both legs pay annually and use day count 'Act/365F'.
+   * The spot date offset is 2 days and there is no payment date offset.
+   */
+  public static final FixedOvernightSwapConvention CLP_FIXED_6M_CAMARA_OIS =
+      FixedOvernightSwapConvention.of(StandardFixedOvernightSwapConventions.CLP_FIXED_6M_CAMARA_OIS.getName());
+
   //-------------------------------------------------------------------------
   /**
    * Restricted constructor.

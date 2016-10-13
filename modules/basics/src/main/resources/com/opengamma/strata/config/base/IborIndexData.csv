@@ -1,12 +1,5 @@
 Name,Currency,Active,Day Count,Fixing Calendar,Offset Days,Offset Calendar,Effective Date Calendar,Tenor,Tenor Convention,FixingTime,FixingZone
 ,,,,,,
-AED-EIBOR-1M,AED,true,Act/360,Fri/Sat,2,Fri/Sat,Fri/Sat,1M,LastBusinessDay,11:00,Europe/London
-AED-EIBOR-3M,AED,true,Act/360,Fri/Sat,2,Fri/Sat,Fri/Sat,3M,LastBusinessDay,11:00,Europe/London
-,,,,,,
-SAR-SAIBOR-1M,SAR,true,Act/360,Fri/Sat,2,Fri/Sat,Fri/Sat,1M,LastBusinessDay,11:00,Europe/London
-SAR-SAIBOR-2M,SAR,true,Act/360,Fri/Sat,2,Fri/Sat,Fri/Sat,2M,LastBusinessDay,11:00,Europe/London
-SAR-SAIBOR-3M,SAR,true,Act/360,Fri/Sat,2,Fri/Sat,Fri/Sat,3M,LastBusinessDay,11:00,Europe/London
-,,,,,,
 GBP-LIBOR-1W,GBP,true,Act/365F,GBLO,0,GBLO,GBLO,1W,None,11:00,Europe/London
 GBP-LIBOR-2W,GBP,false,Act/365F,GBLO,0,GBLO,GBLO,2W,None,11:00,Europe/London
 GBP-LIBOR-1M,GBP,true,Act/365F,GBLO,0,GBLO,GBLO,1M,LastBusinessDay,11:00,Europe/London
@@ -171,3 +164,12 @@ SEK-STIBOR-3M,SEK,true,Act/360,SEST,2,SEST,SEST,3M,None,11:00,Europe/Stockholm
 SEK-STIBOR-6M,SEK,true,Act/360,SEST,2,SEST,SEST,6M,None,11:00,Europe/Stockholm
 SEK-STIBOR-9M,SEK,false,Act/360,SEST,2,SEST,SEST,9M,None,11:00,Europe/Stockholm
 SEK-STIBOR-12M,SEK,false,Act/360,SEST,2,SEST,SEST,12M,None,11:00,Europe/Stockholm
+,,,,,,
+AED-EIBOR-1M,AED,true,Act/360,Fri/Sat,2,Fri/Sat,Fri/Sat,1M,LastBusinessDay,11:00,Europe/London
+AED-EIBOR-3M,AED,true,Act/360,Fri/Sat,2,Fri/Sat,Fri/Sat,3M,LastBusinessDay,11:00,Europe/London
+,,,,,,
+SAR-SAIBOR-1M,SAR,true,Act/360,Fri/Sat,2,Fri/Sat,Fri/Sat,1M,LastBusinessDay,11:00,Europe/London
+SAR-SAIBOR-2M,SAR,true,Act/360,Fri/Sat,2,Fri/Sat,Fri/Sat,2M,LastBusinessDay,11:00,Europe/London
+SAR-SAIBOR-3M,SAR,true,Act/360,Fri/Sat,2,Fri/Sat,Fri/Sat,3M,LastBusinessDay,11:00,Europe/London
+,,,,,,
+CLP-CAMARA-6M,CLP,true,Act/360,GBLO,2,GBLO,GBLO+USNY,6M,LastBusinessDay,11:00,Europe/London

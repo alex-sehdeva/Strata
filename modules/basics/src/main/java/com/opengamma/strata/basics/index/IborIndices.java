@@ -22,37 +22,6 @@ public final class IborIndices {
 
   //-------------------------------------------------------------------------
   /**
-   * The 3 month EIBOR index for AED.
-   * <p>
-   * The "Emirates Interbank Offered Rate".
-   */
-  public static final IborIndex SAR_SAIBOR_1M = IborIndex.of("SAR-SAIBOR-1M");
-  /**
-   * The 3 month EIBOR index for AED.
-   * <p>
-   * The "Emirates Interbank Offered Rate".
-   */
-  public static final IborIndex SAR_SAIBOR_2M = IborIndex.of("SAR-SAIBOR-2M");
-  /**
-   * The 3 month EIBOR index for AED.
-   * <p>
-   * The "Emirates Interbank Offered Rate".
-   */
-  public static final IborIndex SAR_SAIBOR_3M = IborIndex.of("SAR-SAIBOR-3M");
-  /**
-   * The 1 month EIBOR index for AED.
-   * <p>
-   * The "Emirates Interbank Offered Rate".
-   */
-  public static final IborIndex AED_EIBOR_1M = IborIndex.of("AED-EIBOR-1M");
-  /**
-   * The 3 month EIBOR index for AED.
-   * <p>
-   * The "Emirates Interbank Offered Rate".
-   */
-  public static final IborIndex AED_EIBOR_3M = IborIndex.of("AED-EIBOR-3M");
-  //-------------------------------------------------------------------------
-  /**
    * The 1 week LIBOR index for GBP.
    * <p>
    * The "London Interbank Offered Rate".
@@ -584,6 +553,41 @@ public final class IborIndices {
   public static final IborIndex SEK_STIBOR_6M = IborIndex.of("SEK-STIBOR-6M");
 
   //-------------------------------------------------------------------------
+  /**
+   * The 1 month SAIBOR index for SAR.
+   * <p>
+   * The "Saudi Arabia Interbank Offered Rate".
+   */
+  public static final IborIndex SAR_SAIBOR_1M = IborIndex.of("SAR-SAIBOR-1M");
+  /**
+   * The 2 month SAIBOR index for SAR.
+   * <p>
+   * The "Saudi Arabia Interbank Offered Rate".
+   */
+  public static final IborIndex SAR_SAIBOR_2M = IborIndex.of("SAR-SAIBOR-2M");
+  /**
+   * The 3 month SAIBOR index for SAR.
+   * <p>
+   * The "Saudi Arabia Interbank Offered Rate".
+   */
+  public static final IborIndex SAR_SAIBOR_3M = IborIndex.of("SAR-SAIBOR-3M");
+
+  //-------------------------------------------------------------------------
+  /**
+   * The 1 month EIBOR index for AED.
+   * <p>
+   * The "Emirates Interbank Offered Rate".
+   */
+  public static final IborIndex AED_EIBOR_1M = IborIndex.of("AED-EIBOR-1M");
+  /**
+   * The 3 month EIBOR index for AED.
+   * <p>
+   * The "Emirates Interbank Offered Rate".
+   */
+  public static final IborIndex AED_EIBOR_3M = IborIndex.of("AED-EIBOR-3M");
+
+  //-------------------------------------------------------------------------
+
   /**
    * Restricted constructor.
    */

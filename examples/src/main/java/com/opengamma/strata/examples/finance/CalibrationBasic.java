@@ -37,22 +37,25 @@ public class CalibrationBasic {
   /**
    * The valuation date.
    */  
-  private static final LocalDate VAL_DATE = LocalDate.of(2015, 7, 21);
+  private static final LocalDate VAL_DATE = LocalDate.of(2016, 10, 12);
   /**
    * The curve group name.
    */
   //private static final CurveGroupName CURVE_GROUP_NAME = CurveGroupName.of("USD-DSCON-LIBOR3M");
 //  private static final CurveGroupName CURVE_GROUP_NAME = CurveGroupName.of("AED-DSCON-EIBOR3M");
-  private static final CurveGroupName CURVE_GROUP_NAME = CurveGroupName.of("SAR-DSCON-SAIBOR3M");
+//  private static final CurveGroupName CURVE_GROUP_NAME = CurveGroupName.of("SAR-DSCON-SAIBOR3M");
+  private static final CurveGroupName CURVE_GROUP_NAME = CurveGroupName.of("CLP-DSCON-CAMARA6M");
   /**
    * The ibor index name.
    */
 //  private static final IborIndex IBOR_INDEX = IborIndex.of("AED-EIBOR-3M");
-  private static final IborIndex IBOR_INDEX = IborIndex.of("SAR-SAIBOR-3M");
+//  private static final IborIndex IBOR_INDEX = IborIndex.of("SAR-SAIBOR-3M");
+  private static final IborIndex IBOR_INDEX = IborIndex.of("CLP-CAMARA-6M");
   /**
    * The ibor currency.
    */
-  private static final Currency CURRENCY = Currency.of("SAR");
+//  private static final Currency CURRENCY = Currency.of("SAR");
+  private static final Currency CURRENCY = Currency.of("CLP");
   /**
    * The location of the data files.
    */
@@ -119,23 +122,27 @@ public class CalibrationBasic {
     System.out.println(discountFactors.zeroRate(1));
     
     Map<String, Tenor> publishedTenors = new HashMap<>();
-    publishedTenors.put("1M", Tenor.of(Period.ofMonths(1)));
-    publishedTenors.put("2M", Tenor.of(Period.ofMonths(2)));
+//    publishedTenors.put("1M", Tenor.of(Period.ofMonths(1)));
+//    publishedTenors.put("2M", Tenor.of(Period.ofMonths(2)));
     publishedTenors.put("3M", Tenor.of(Period.ofMonths(3)));
     publishedTenors.put("6M", Tenor.of(Period.ofMonths(6)));
     publishedTenors.put("9M", Tenor.of(Period.ofMonths(9)));
     publishedTenors.put("1Y", Tenor.of(Period.ofYears(1)));
+    publishedTenors.put("18M", Tenor.of(Period.ofMonths(18)));
     publishedTenors.put("2Y", Tenor.of(Period.ofYears(2)));
     publishedTenors.put("3Y", Tenor.of(Period.ofYears(3)));
     publishedTenors.put("4Y", Tenor.of(Period.ofYears(4)));
     publishedTenors.put("5Y", Tenor.of(Period.ofYears(5)));
     publishedTenors.put("7Y", Tenor.of(Period.ofYears(7)));
     publishedTenors.put("10Y", Tenor.of(Period.ofYears(10)));
+    publishedTenors.put("15Y", Tenor.of(Period.ofYears(15)));
+    publishedTenors.put("20Y", Tenor.of(Period.ofYears(20)));
     
     try (Stream<String> input = publishedTenors.keySet().stream();)
     {
       input.map(s -> marketDataDate.toString() + 
-          ",SAR-3MS," + 
+//          ",SAR-3MS," + 
+          ",CLP-6MC," +           
           publishedTenors.get(s).addTo(marketDataDate).toString() + 
           "," + 
           String.valueOf(discountFactors.zeroRate((LocalDate)publishedTenors.get(s).addTo(marketDataDate))
@@ -180,18 +187,21 @@ public class CalibrationBasic {
   public static void backfill() throws FileNotFoundException {
 
     Map<String, Tenor> publishedTenors = new HashMap<>();
-    publishedTenors.put("1M", Tenor.of(Period.ofMonths(1)));
-    publishedTenors.put("2M", Tenor.of(Period.ofMonths(2)));
-    publishedTenors.put("3M", Tenor.of(Period.ofMonths(3)));
-    publishedTenors.put("6M", Tenor.of(Period.ofMonths(6)));
-    publishedTenors.put("9M", Tenor.of(Period.ofMonths(9)));
-    publishedTenors.put("1Y", Tenor.of(Period.ofYears(1)));
-    publishedTenors.put("2Y", Tenor.of(Period.ofYears(2)));
-    publishedTenors.put("3Y", Tenor.of(Period.ofYears(3)));
-    publishedTenors.put("4Y", Tenor.of(Period.ofYears(4)));
-    publishedTenors.put("5Y", Tenor.of(Period.ofYears(5)));
-    publishedTenors.put("7Y", Tenor.of(Period.ofYears(7)));
-    publishedTenors.put("10Y", Tenor.of(Period.ofYears(10)));       
+//  publishedTenors.put("1M", Tenor.of(Period.ofMonths(1)));
+//  publishedTenors.put("2M", Tenor.of(Period.ofMonths(2)));
+  publishedTenors.put("3M", Tenor.of(Period.ofMonths(3)));
+  publishedTenors.put("6M", Tenor.of(Period.ofMonths(6)));
+  publishedTenors.put("9M", Tenor.of(Period.ofMonths(9)));
+  publishedTenors.put("1Y", Tenor.of(Period.ofYears(1)));
+  publishedTenors.put("18M", Tenor.of(Period.ofMonths(18)));
+  publishedTenors.put("2Y", Tenor.of(Period.ofYears(2)));
+  publishedTenors.put("3Y", Tenor.of(Period.ofYears(3)));
+  publishedTenors.put("4Y", Tenor.of(Period.ofYears(4)));
+  publishedTenors.put("5Y", Tenor.of(Period.ofYears(5)));
+  publishedTenors.put("7Y", Tenor.of(Period.ofYears(7)));
+  publishedTenors.put("10Y", Tenor.of(Period.ofYears(10)));
+  publishedTenors.put("15Y", Tenor.of(Period.ofYears(15)));
+  publishedTenors.put("20Y", Tenor.of(Period.ofYears(20)));    
     
     ImmutableList<LocalDate> dates = DatesCsvLoader.load(DATES_RESOURCE);
     
@@ -225,7 +235,8 @@ public class CalibrationBasic {
           try (Stream<String> input = publishedTenors.keySet().stream();)
           {
             input.map(s -> date.toString() + 
-                ",SAR-3MS," + 
+//                ",SAR-3MS," + 
+                ",CLP-6MC," +                 
                 publishedTenors.get(s).addTo(date).toString() + 
                 "," + 
 //                String.valueOf(discountFactors.zeroRate(publishedFractions.get(s)) 

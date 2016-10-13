@@ -22,14 +22,6 @@ public final class FloatingRateNames {
 
   //-------------------------------------------------------------------------
   /**
-   * Constant for SAR-SAIBOR.
-   */
-  public static final FloatingRateName SAR_SAIBOR = FloatingRateName.of("SAR-SAIBOR");
-  /**
-   * Constant for AED-EIBOR.
-   */
-  public static final FloatingRateName AED_EIBOR = FloatingRateName.of("AED-EIBOR");
-  /**
    * Constant for GBP-LIBOR.
    */
   public static final FloatingRateName GBP_LIBOR = FloatingRateName.of("GBP-LIBOR");
@@ -53,6 +45,14 @@ public final class FloatingRateNames {
    * Constant for EUR-EURIBOR.
    */
   public static final FloatingRateName EUR_EURIBOR = FloatingRateName.of("EUR-EURIBOR");
+  /**
+   * Constant for SAR-SAIBOR.
+   */
+  public static final FloatingRateName SAR_SAIBOR = FloatingRateName.of("SAR-SAIBOR");
+  /**
+   * Constant for AED-EIBOR.
+   */
+  public static final FloatingRateName AED_EIBOR = FloatingRateName.of("AED-EIBOR");
 
   /**
    * Constant for GBP-SONIA Overnight index.
@@ -74,6 +74,10 @@ public final class FloatingRateNames {
    * Constant for JPY-TONAR Overnight index.
    */
   public static final FloatingRateName JPY_TONAR = FloatingRateName.of("JPY-TONAR");
+  /**
+   * Constant for CLP-CAMARA Overnight index.
+   */
+  public static final FloatingRateName CLP_CAMARA = FloatingRateName.of("CLP-CAMARA");
 
   /**
    * Constant for USD-FED-FUND Overnight index using averaging.
