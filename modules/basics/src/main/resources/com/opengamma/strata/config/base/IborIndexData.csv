@@ -171,5 +171,3 @@ AED-EIBOR-3M,AED,true,Act/360,Fri/Sat,2,Fri/Sat,Fri/Sat,3M,LastBusinessDay,11:00
 SAR-SAIBOR-1M,SAR,true,Act/360,Fri/Sat,2,Fri/Sat,Fri/Sat,1M,LastBusinessDay,11:00,Europe/London
 SAR-SAIBOR-2M,SAR,true,Act/360,Fri/Sat,2,Fri/Sat,Fri/Sat,2M,LastBusinessDay,11:00,Europe/London
 SAR-SAIBOR-3M,SAR,true,Act/360,Fri/Sat,2,Fri/Sat,Fri/Sat,3M,LastBusinessDay,11:00,Europe/London
-,,,,,,
-CLP-CAMARA-6M,CLP,true,Act/360,GBLO,2,GBLO,GBLO+USNY,6M,LastBusinessDay,11:00,Europe/London

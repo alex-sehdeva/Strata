@@ -55,7 +55,8 @@ public class CalibrationCheckExample {
   /**
    * The valuation date.
    */
-  private static final LocalDate VAL_DATE = LocalDate.of(2015, 7, 21);
+//  private static final LocalDate VAL_DATE = LocalDate.of(2015, 7, 21);
+  private static final LocalDate VAL_DATE = LocalDate.of(2016,10,12);
 
   /**
    * The tolerance to use.
@@ -65,7 +66,8 @@ public class CalibrationCheckExample {
    * The curve group name.
    */
   //private static final CurveGroupName CURVE_GROUP_NAME = CurveGroupName.of("USD-DSCON-LIBOR3M");
-  private static final CurveGroupName CURVE_GROUP_NAME = CurveGroupName.of("AED-DSCON-EIBOR3M");
+  //private static final CurveGroupName CURVE_GROUP_NAME = CurveGroupName.of("AED-DSCON-EIBOR3M");
+  private static final CurveGroupName CURVE_GROUP_NAME = CurveGroupName.of("CLP-DSCON-CAMARA6M");
 
   /**
    * The location of the data files.

@@ -587,7 +587,14 @@ public final class IborIndices {
   public static final IborIndex AED_EIBOR_3M = IborIndex.of("AED-EIBOR-3M");
 
   //-------------------------------------------------------------------------
+  /**
+   * The overnight rate for CLP.
+   * <p>
+   * The "Emirates Interbank Offered Rate".
+   */
+  public static final IborIndex CLP_CAMARA = IborIndex.of("CLP-CAMARA");
 
+  //-------------------------------------------------------------------------
   /**
    * Restricted constructor.
    */

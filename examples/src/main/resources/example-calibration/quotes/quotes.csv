@@ -1990,6 +1990,7 @@ Valuation Date,Symbology,Ticker,Field Name,Value
 2016-08-23,OG-Ticker,AED-IRS3M-4Y,MarketValue,0.02147
 2016-08-23,OG-Ticker,AED-IRS3M-5Y,MarketValue,0.0232099999999999
 2016-08-23,OG-Ticker,AED-IRS3M-7Y,MarketValue,0.026935
+2016-10-12,OG-Ticker,CLP-Fixing-1D,MarketValue,0.035
 2016-10-12,OG-Ticker,CLP-OIS6M-3M,MarketValue,0.0347
 2016-10-12,OG-Ticker,CLP-OIS6M-6M,MarketValue,0.0338
 2016-10-12,OG-Ticker,CLP-OIS6M-9M,MarketValue,0.0333
