@@ -193,12 +193,14 @@ public class CalibrationBasic {
   publishedTenors.put("6M", Tenor.of(Period.ofMonths(6)));
   publishedTenors.put("9M", Tenor.of(Period.ofMonths(9)));
   publishedTenors.put("1Y", Tenor.of(Period.ofYears(1)));
-  publishedTenors.put("18M", Tenor.of(Period.ofMonths(18)));
   publishedTenors.put("2Y", Tenor.of(Period.ofYears(2)));
   publishedTenors.put("3Y", Tenor.of(Period.ofYears(3)));
   publishedTenors.put("4Y", Tenor.of(Period.ofYears(4)));
   publishedTenors.put("5Y", Tenor.of(Period.ofYears(5)));
+  publishedTenors.put("6Y", Tenor.of(Period.ofYears(6)));
   publishedTenors.put("7Y", Tenor.of(Period.ofYears(7)));
+  publishedTenors.put("8Y", Tenor.of(Period.ofYears(8)));
+  publishedTenors.put("9Y", Tenor.of(Period.ofYears(9)));
   publishedTenors.put("10Y", Tenor.of(Period.ofYears(10)));
   publishedTenors.put("15Y", Tenor.of(Period.ofYears(15)));
   publishedTenors.put("20Y", Tenor.of(Period.ofYears(20)));    

@@ -17,6 +17,7 @@ import static com.opengamma.strata.basics.schedule.Frequency.P6M;
 import static com.opengamma.strata.basics.schedule.Frequency.P12M;
 import static com.opengamma.strata.basics.schedule.Frequency.TERM;
 import static com.opengamma.strata.product.swap.OvernightAccrualMethod.COMPOUNDED;
+import static com.opengamma.strata.product.swap.OvernightAccrualMethod.AVERAGED;
 
 import com.opengamma.strata.basics.date.BusinessDayAdjustment;
 import com.opengamma.strata.basics.date.DayCount;
@@ -25,6 +26,7 @@ import com.opengamma.strata.basics.date.HolidayCalendarId;
 import com.opengamma.strata.basics.index.OvernightIndex;
 import com.opengamma.strata.basics.schedule.Frequency;
 import com.opengamma.strata.basics.schedule.StubConvention;
+import com.opengamma.strata.product.swap.OvernightAccrualMethod;
 
 /**
  * Market standard Fixed-Overnight swap conventions.
@@ -40,7 +42,7 @@ final class StandardFixedOvernightSwapConventions {
    * The spot date offset is 2 days and the payment date offset is 2 days.
    */
   public static final FixedOvernightSwapConvention USD_FIXED_TERM_FED_FUND_OIS =
-      makeConvention("USD-FIXED-TERM-FED-FUND-OIS", USD_FED_FUND, ACT_360, TERM, 2, 2);
+      makeConvention("USD-FIXED-TERM-FED-FUND-OIS", USD_FED_FUND, ACT_360, TERM, 2, 2, COMPOUNDED);
 
   /**
    * USD fixed vs Fed Fund OIS swap for terms greater than one year.
@@ -49,7 +51,7 @@ final class StandardFixedOvernightSwapConventions {
    * The spot date offset is 2 days and the payment date offset is 2 days.
    */
   public static final FixedOvernightSwapConvention USD_FIXED_1Y_FED_FUND_OIS =
-      makeConvention("USD-FIXED-1Y-FED-FUND-OIS", USD_FED_FUND, ACT_360, P12M, 2, 2);
+      makeConvention("USD-FIXED-1Y-FED-FUND-OIS", USD_FED_FUND, ACT_360, P12M, 2, 2, COMPOUNDED);
 
   //-------------------------------------------------------------------------
   /**
@@ -59,7 +61,7 @@ final class StandardFixedOvernightSwapConventions {
    * The spot date offset is 2 days and the payment date offset is 1 day.
    */
   public static final FixedOvernightSwapConvention EUR_FIXED_TERM_EONIA_OIS =
-      makeConvention("EUR-FIXED-TERM-EONIA-OIS", EUR_EONIA, ACT_360, TERM, 1, 2);
+      makeConvention("EUR-FIXED-TERM-EONIA-OIS", EUR_EONIA, ACT_360, TERM, 1, 2, COMPOUNDED);
 
   /**
    * EUR fixed vs EONIA OIS swap for terms greater than one year.
@@ -68,7 +70,7 @@ final class StandardFixedOvernightSwapConventions {
    * The spot date offset is 2 days and the payment date offset is 1 day.
    */
   public static final FixedOvernightSwapConvention EUR_FIXED_1Y_EONIA_OIS =
-      makeConvention("EUR-FIXED-1Y-EONIA-OIS", EUR_EONIA, ACT_360, P12M, 1, 2);
+      makeConvention("EUR-FIXED-1Y-EONIA-OIS", EUR_EONIA, ACT_360, P12M, 1, 2, COMPOUNDED);
 
   //-------------------------------------------------------------------------
   /**
@@ -78,7 +80,7 @@ final class StandardFixedOvernightSwapConventions {
    * The spot date offset is 0 days and there is no payment date offset.
    */
   public static final FixedOvernightSwapConvention GBP_FIXED_TERM_SONIA_OIS =
-      makeConvention("GBP-FIXED-TERM-SONIA-OIS", GBP_SONIA, ACT_365F, TERM, 0, 0);
+      makeConvention("GBP-FIXED-TERM-SONIA-OIS", GBP_SONIA, ACT_365F, TERM, 0, 0, COMPOUNDED);
 
   /**
    * GBP fixed vs SONIA OIS swap for terms greater than one year.
@@ -87,7 +89,7 @@ final class StandardFixedOvernightSwapConventions {
    * The spot date offset is 0 days and there is no payment date offset.
    */
   public static final FixedOvernightSwapConvention GBP_FIXED_1Y_SONIA_OIS =
-      makeConvention("GBP-FIXED-1Y-SONIA-OIS", GBP_SONIA, ACT_365F, P12M, 0, 0);
+      makeConvention("GBP-FIXED-1Y-SONIA-OIS", GBP_SONIA, ACT_365F, P12M, 0, 0, COMPOUNDED);
 
   //-------------------------------------------------------------------------
   /**
@@ -97,7 +99,7 @@ final class StandardFixedOvernightSwapConventions {
    * The spot date offset is 2 days and there is no payment date offset.
    */
   public static final FixedOvernightSwapConvention JPY_FIXED_TERM_TONAR_OIS =
-      makeConvention("JPY-FIXED-TERM-TONAR-OIS", JPY_TONAR, ACT_365F, TERM, 0, 0);
+      makeConvention("JPY-FIXED-TERM-TONAR-OIS", JPY_TONAR, ACT_365F, TERM, 0, 0, COMPOUNDED);
 
   /**
    * JPY fixed vs TONAR OIS swap for terms greater than one year.
@@ -106,7 +108,7 @@ final class StandardFixedOvernightSwapConventions {
    * The spot date offset is 2 days and there is no payment date offset.
    */
   public static final FixedOvernightSwapConvention JPY_FIXED_1Y_TONAR_OIS =
-      makeConvention("JPY-FIXED-1Y-TONAR-OIS", JPY_TONAR, ACT_365F, P12M, 0, 2);
+      makeConvention("JPY-FIXED-1Y-TONAR-OIS", JPY_TONAR, ACT_365F, P12M, 0, 2, COMPOUNDED);
 
   /**
    * CLP fixed vs CAMARA OIS swap for all terms.
@@ -115,7 +117,7 @@ final class StandardFixedOvernightSwapConventions {
    * The spot date offset is 2 days and there is no payment date offset.
    */
   public static final FixedOvernightSwapConvention CLP_FIXED_6M_CAMARA_OIS =
-      makeConvention("CLP-FIXED-6M-CAMARA-OIS", CLP_CAMARA, ACT_360, P6M, 0, 2);
+      makeConvention("CLP-FIXED-6M-CAMARA-OIS", CLP_CAMARA, ACT_360, P6M, 0, 2, AVERAGED);
 
   //-------------------------------------------------------------------------
   // build conventions
@@ -125,7 +127,8 @@ final class StandardFixedOvernightSwapConventions {
       DayCount dayCount,
       Frequency frequency,
       int paymentLag,
-      int spotLag) {
+      int spotLag,
+      OvernightAccrualMethod accrual) {
 
     HolidayCalendarId calendar = index.getFixingCalendar();
     DaysAdjustment paymentDateOffset = DaysAdjustment.ofBusinessDays(paymentLag, calendar);
@@ -143,7 +146,7 @@ final class StandardFixedOvernightSwapConventions {
             .build(),
         OvernightRateSwapLegConvention.builder()
             .index(index)
-            .accrualMethod(COMPOUNDED)
+            .accrualMethod(accrual)
             .accrualFrequency(frequency)
             .paymentFrequency(frequency)
             .paymentDateOffset(paymentDateOffset)
