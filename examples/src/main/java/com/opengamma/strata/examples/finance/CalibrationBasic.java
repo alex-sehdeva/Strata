@@ -246,9 +246,12 @@ public class CalibrationBasic {
                     + "," + s))
             .forEachOrdered(output::println);
             }
-          
+          catch (Exception ex) {
+            System.out.println("oh shittt");
+          }         
         } catch (Exception ex) {
-          // TODO: handle exception
+          System.out.println(ex);
+          System.out.println("double oh shittt");
         }
         }
       }
