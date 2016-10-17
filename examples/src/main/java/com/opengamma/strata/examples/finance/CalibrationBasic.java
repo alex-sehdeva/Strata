@@ -50,8 +50,8 @@ public class CalibrationBasic {
    */
 //  private static final IborIndex IBOR_INDEX = IborIndex.of("AED-EIBOR-3M");
 //  private static final IborIndex IBOR_INDEX = IborIndex.of("SAR-SAIBOR-3M");
-  private static final IborIndex IBOR_INDEX = IborIndex.of("CLP-CAMARA-6M");
-  /**
+//  private static final IborIndex IBOR_INDEX = IborIndex.of("CLP-CAMARA");
+  /**modules/basics/src/main/resources/com/opengamma/strata/config/base/OvernightIndexData.csv
    * The ibor currency.
    */
 //  private static final Currency CURRENCY = Currency.of("SAR");
@@ -93,7 +93,7 @@ public class CalibrationBasic {
       ResourceLocator settingsResource, 
       ResourceLocator curveResource,
       CurveGroupName curveGroupName,
-      IborIndex iborIndex,
+      //IborIndex iborIndex,
       Currency iborCurrency) {
     
     ReferenceData refData = ReferenceData.standard();
@@ -167,7 +167,7 @@ public class CalibrationBasic {
       String settingsResource, 
       String curveResource,
       String curveGroupName,
-      String iborIndex,
+      //String iborIndex,
       String iborCurrency) {
     
     /**
@@ -180,7 +180,7 @@ public class CalibrationBasic {
         ResourceLocator.of(ResourceLocator.FILE_URL_PREFIX + pathConfig + settingsResource),
         ResourceLocator.of(ResourceLocator.FILE_URL_PREFIX + pathConfig + curveResource),        
         CurveGroupName.of(curveGroupName),
-        IborIndex.of(iborIndex),
+        //IborIndex.of(iborIndex),
         Currency.of(iborCurrency));
   }
   

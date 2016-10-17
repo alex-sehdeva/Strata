@@ -588,14 +588,6 @@ public final class IborIndices {
 
   //-------------------------------------------------------------------------
   /**
-   * The overnight rate for CLP.
-   * <p>
-   * The "Emirates Interbank Offered Rate".
-   */
-  public static final IborIndex CLP_CAMARA = IborIndex.of("CLP-CAMARA");
-
-  //-------------------------------------------------------------------------
-  /**
    * Restricted constructor.
    */
   private IborIndices() {

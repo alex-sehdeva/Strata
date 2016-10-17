@@ -93,18 +93,6 @@ public final class OvernightIndices {
    * The "Chilean Overnight" index.
    */
   public static final OvernightIndex CLP_CAMARA = OvernightIndex.of("CLP-CAMARA");
-  /**
-   * The EIBOR index for AED.
-   * <p>
-   * EIBOR is not an "Overnight" index, maybe delete this entry.
-   */
-  public static final OvernightIndex AED_EIBOR = OvernightIndex.of("AED-EIBOR");
-  /**
-   * The SAIBOR index for SAR.
-   * <p>
-   * SAIBOR is not an "Overnight" index,  maybe delete this entry.
-   */
-  public static final OvernightIndex SAR_SAIBOR = OvernightIndex.of("SAR-SAIBOR");
 
   //-------------------------------------------------------------------------
   /**
